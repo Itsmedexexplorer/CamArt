@@ -42,10 +42,6 @@ public class CamartNativeModule: Module {
       UIApplication.shared.open(link)
     }.runOnQueue(.main)
 
-    AsyncFunction("addToWhatsApp") { (_: String, _: String) throws in
-      throw Failure("Use sendWhatsAppPack on iOS")
-    }
-
     Function("reloadWidgets") {
       WidgetCenter.shared.reloadAllTimelines()
     }

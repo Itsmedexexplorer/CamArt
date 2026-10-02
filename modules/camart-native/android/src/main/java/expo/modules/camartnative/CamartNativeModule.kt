@@ -44,6 +44,7 @@ class CamartNativeModule : Module() {
           promise.reject(CodedException("ERR_SEGMENT", e.message ?: "Subject lift failed", e))
           segmenter.close()
         }
+      Unit
     }
 
     AsyncFunction("addToWhatsApp") { id: String, name: String ->
@@ -58,10 +59,6 @@ class CamartNativeModule : Module() {
       } catch (e: ActivityNotFoundException) {
         throw CodedException("ERR_NO_WHATSAPP", "WhatsApp is not installed", e)
       }
-    }
-
-    AsyncFunction("sendWhatsAppPack") { _: String ->
-      throw CodedException("ERR_PLATFORM", "Use addToWhatsApp on Android", null)
     }
 
     Function("reloadWidgets") { TodayWidget.updateAll(context) }

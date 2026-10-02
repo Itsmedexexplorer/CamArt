@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.view.View
 import android.widget.RemoteViews
@@ -16,7 +17,7 @@ class TodayWidget : AppWidgetProvider() {
     val file = File(context.filesDir, "camart/widget/today.png")
     // Keep the bitmap small: RemoteViews travel over a size-limited binder.
     val bmp = if (file.exists()) BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = 2 }) else null
-    val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
+    val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: Intent()
     val tap = PendingIntent.getActivity(context, 0, launch, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     for (id in ids) {
       val views = RemoteViews(context.packageName, R.layout.today_widget)
