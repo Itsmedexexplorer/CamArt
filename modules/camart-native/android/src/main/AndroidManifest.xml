@@ -1,0 +1,24 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <queries>
+    <package android:name="com.whatsapp" />
+    <package android:name="com.whatsapp.w4b" />
+  </queries>
+  <application>
+    <!-- WhatsApp reads sticker packs from this provider. -->
+    <provider
+      android:name="expo.modules.camartnative.StickerContentProvider"
+      android:authorities="${applicationId}.stickercontentprovider"
+      android:enabled="true"
+      android:exported="true"
+      android:readPermission="com.whatsapp.sticker.READ" />
+    <!-- "Today's sticker" home-screen widget. -->
+    <receiver android:name="expo.modules.camartnative.TodayWidget" android:exported="false" android:label="Today's sticker">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/today_widget_info" />
+    </receiver>
+    <!-- Ask Play services to fetch the segmentation model at install time. -->
+    <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="subject_segment" />
+  </application>
+</manifest>

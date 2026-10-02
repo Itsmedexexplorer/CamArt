@@ -1,0 +1,1 @@
+{ "name": "camart-native", "version": "0.1.0", "description": "CamArt native bits: subject lift, WhatsApp sticker packs, widgets", "main": "index.ts", "license": "MIT", "author": "CamArt", "homepage": "https://camart.app" }
