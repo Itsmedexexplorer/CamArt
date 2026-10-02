@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <queries>
     <package android:name="com.whatsapp" />
     <package android:name="com.whatsapp.w4b" />
@@ -18,8 +18,5 @@
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/today_widget_info" />
     </receiver>
-    <!-- Ask Play services to fetch ML Kit models at install time. The dev client also declares
-         barcode_ui here, so list both and win the merge. -->
-    <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui,subject_segment" tools:replace="android:value" />
   </application>
 </manifest>

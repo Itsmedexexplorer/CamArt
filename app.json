@@ -62,7 +62,8 @@
         }
       ],
       "@bacons/apple-targets",
-      "expo-dev-client"
+      "expo-dev-client",
+      "./plugins/with-mlkit-models"
     ],
     "experiments": {
       "typedRoutes": true,
