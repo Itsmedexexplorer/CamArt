@@ -39,9 +39,9 @@ export default function Root() {
       <SchemeContext.Provider value={scheme}>
         <ThemeProvider value={navThemes[scheme]}>
           <StatusBar style={intro || scheme === 'dark' ? 'light' : 'dark'} />
-          <Stack screenOptions={{ headerShadowVisible: false, headerTitleStyle: { fontFamily: font.display, fontSize: 20 }, headerTintColor: c.ink, headerBackButtonDisplayMode: 'minimal' }}>
+          <Stack screenOptions={{ headerShadowVisible: false, headerTitleStyle: { fontFamily: font.display, fontSize: 20 }, headerTintColor: c.ink, headerBackButtonDisplayMode: 'minimal', animation: 'fade_from_bottom', animationDuration: 280 }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="editor" options={{ presentation: 'fullScreenModal', headerShown: false, gestureEnabled: false }} />
+            <Stack.Screen name="editor" options={{ presentation: 'fullScreenModal', headerShown: false, gestureEnabled: false, animation: 'fade' }} />
             <Stack.Screen name="memory/[id]" options={{ title: '' }} />
             <Stack.Screen name="info" options={{ presentation: 'modal' }} />
           </Stack>
