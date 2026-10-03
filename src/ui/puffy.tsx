@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
 import type { ReactNode, RefObject } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { uriOf, type Memory } from '@/lib/memories';
@@ -10,10 +10,10 @@ import { font, hit, lift, motion, radius, space, themed, useTheme, type Palette,
 import type { IconType } from '@/ui/icons';
 import { ShapeArt } from '@/ui/shape-art';
 
-type Tone = 'cherry' | 'ink' | 'soft' | 'glass' | 'glassDark';
+type Tone = 'cherry' | 'ink' | 'soft' | 'glass';
 const tones = (c: Palette) => ({
-  bg: { cherry: c.cherry, ink: c.ink, soft: c.wash, glass: 'transparent', glassDark: 'transparent' } as Record<Tone, string>,
-  fg: { cherry: '#FFFFFF', ink: c.milk, soft: c.ink, glass: c.ink, glassDark: '#FFFFFF' } as Record<Tone, string>,
+  bg: { cherry: c.cherry, ink: c.ink, soft: c.wash, glass: 'transparent' } as Record<Tone, string>,
+  fg: { cherry: '#FFFFFF', ink: c.milk, soft: c.ink, glass: onGlass.fg } as Record<Tone, string>,
 });
 
 /** Press physics shared by every tactile surface: a quick squeeze to 0.96. */
@@ -27,36 +27,41 @@ function usePress() {
   };
 }
 
-/** Frosted surface. Real blur on iOS; on Android real blur needs a `target` (a BlurTargetView ref), else a milky tint. */
-// Liquid-glass sheen: a bright specular band at the top fading out, and a faint bounce light at the bottom.
-const SHEEN_SMOKED = 'linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.05) 38%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.07) 100%)';
-const SHEEN_FROST = 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.15) 40%, rgba(255,255,255,0) 62%, rgba(255,255,255,0.25) 100%)';
+/**
+ * The one glass used by every floating control (tab bar, search, camera buttons, editor close).
+ * Smoked, semi-transparent, white content: reads the same over cream pages, dark pages and the live camera.
+ * Real blur is a bonus layered underneath (iOS always; Android when given a BlurTargetView `target`).
+ * Without blur the tint is a touch denser, so blurred and unblurred glass look like the same material.
+ */
+const SHEEN = 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 62%, rgba(255,255,255,0.06) 100%)';
 
-export function Glass({ children, style, dark, target }: { children?: ReactNode; style?: StyleProp<ViewStyle>; dark?: boolean; target?: RefObject<View | null> }) {
-  // One glass for the whole app. "Smoked" (navbar, camera controls, anything in dark mode) or "frost".
-  const { scheme } = useTheme();
-  const smoked = dark || scheme === 'dark';
+export function Glass({ children, style, target }: { children?: ReactNode; style?: StyleProp<ViewStyle>; target?: RefObject<View | null> }) {
+  const blurred = Platform.OS === 'ios' || !!target;
   return (
     <BlurView
-      intensity={smoked ? 50 : 60}
-      tint={smoked ? 'dark' : 'light'}
+      intensity={40}
+      tint="dark"
       blurMethod={target ? 'dimezisBlurViewSdk31Plus' : 'none'}
       blurTarget={target}
       style={[
-        { overflow: 'hidden', backgroundColor: smoked ? 'rgba(20,24,36,0.36)' : 'rgba(248,247,242,0.42)' },
-        // Rim: brighter on top where light catches the edge, softer around.
         {
+          overflow: 'hidden',
+          backgroundColor: blurred ? 'rgba(18,22,32,0.40)' : 'rgba(18,22,32,0.58)',
+          // Rim: light catches the top edge, a softer hairline around the rest.
           borderWidth: 1,
-          borderColor: smoked ? 'rgba(255,255,255,0.16)' : 'rgba(24,32,51,0.08)',
-          borderTopColor: smoked ? 'rgba(255,255,255,0.42)' : 'rgba(255,255,255,0.95)',
+          borderColor: 'rgba(255,255,255,0.14)',
+          borderTopColor: 'rgba(255,255,255,0.36)',
         },
         style,
       ]}>
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { experimental_backgroundImage: smoked ? SHEEN_SMOKED : SHEEN_FROST }]} />
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { experimental_backgroundImage: SHEEN }]} />
       {children}
     </BlurView>
   );
 }
+
+/** Colours for content sitting on Glass. */
+export const onGlass = { fg: '#FFFFFF', soft: 'rgba(255,255,255,0.62)' };
 
 export function Button({
   label, icon: I, onPress, tone = 'soft', disabled, round, a11y, style, target,
@@ -67,7 +72,7 @@ export function Button({
   const { bg, fg } = tones(useTheme().c);
   const s = useStyles();
   const { style: pressStyle, handlers } = usePress();
-  const glass = tone === 'glass' || tone === 'glassDark';
+  const glass = tone === 'glass';
   const content = (
     <>
       {I && <I size={22} color={fg[tone]} weight={round ? 'bold' : 'fill'} />}
@@ -85,7 +90,7 @@ export function Button({
       style={[{ opacity: disabled ? 0.45 : 1 }, style]}>
       <Animated.View style={[(tone === 'cherry' || tone === 'ink') && lift, pressStyle]}>
         {glass ? (
-          <Glass dark={tone === 'glassDark'} target={target} style={[s.face, round && s.round]}>{content}</Glass>
+          <Glass target={target} style={[s.face, round && s.round]}>{content}</Glass>
         ) : (
           <View style={[s.face, round && s.round, { backgroundColor: bg[tone] }]}>{content}</View>
         )}

@@ -2,7 +2,7 @@ import { BlurTargetView } from 'expo-blur';
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
-import Animated, { useReducedMotion, ZoomIn } from 'react-native-reanimated';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle, useReducedMotion, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { byDay, useMemories, type Memory } from '@/lib/memories';
@@ -10,7 +10,7 @@ import { FILTER_LABEL, SHAPE_LABEL, type Filter, type Shape } from '@/lib/sticke
 import { font, radius, space, themed, useTheme, bouncy } from '@/theme';
 import { DayShelf } from '@/ui/day-shelf';
 import { Close, Search } from '@/ui/icons';
-import { Button, Empty, Glass, Sticker } from '@/ui/puffy';
+import { Button, Empty, Glass, onGlass, Sticker } from '@/ui/puffy';
 import { useTabSpace } from '@/ui/tab-bar';
 
 /** Everything a person might type to find a memory: note, shape, filter, and the day in words. */
@@ -35,6 +35,9 @@ export default function Memories() {
   const reduce = useReducedMotion();
   const target = useRef<View>(null);
   const [q, setQ] = useState('');
+  // Ride above the keyboard while typing, so the field and results stay visible.
+  const kb = useAnimatedKeyboard();
+  const searchLift = useAnimatedStyle(() => ({ bottom: Math.max(tabSpace, kb.height.value + space.md) }));
   const days = useMemo(() => [...byDay(memories)], [memories]);
   const index = useMemo(() => new Map(memories.map((m) => [m.id, haystack(m)])), [memories]);
   const terms = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -89,33 +92,34 @@ export default function Memories() {
       </BlurTargetView>
 
       {memories.length > 0 && (
-        <Glass target={target} style={[s.search, { bottom: tabSpace }]}>
-          <Search size={20} color={c.ink} weight="bold" />
+        <Animated.View style={[s.searchWrap, searchLift]}>
+        <Glass target={target} style={s.search}>
+          <Search size={20} color={onGlass.fg} weight="bold" />
           <TextInput
             value={q}
             onChangeText={setQ}
             placeholder="Search notes, days, shapes"
-            placeholderTextColor={c.inkSoft}
+            placeholderTextColor={onGlass.soft}
+            selectionColor={c.lime}
+            keyboardAppearance="dark"
             returnKeyType="search"
             style={s.input}
             accessibilityLabel="Search memories"
           />
           {q ? (
             <Pressable onPress={() => setQ('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Clear search">
-              <Close size={18} color={c.ink} weight="bold" />
+              <Close size={18} color={onGlass.fg} weight="bold" />
             </Pressable>
           ) : null}
         </Glass>
+        </Animated.View>
       )}
     </View>
   );
 }
 
 const useStyles = themed((c, ty) => StyleSheet.create({
-  search: {
-    position: 'absolute', alignSelf: 'center', width: '82%', height: 52, borderRadius: radius.pill,
-    flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg,
-    borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(24,32,51,0.12)',
-  },
-  input: { flex: 1, fontFamily: font.uiMedium, fontSize: 16, color: c.ink, paddingVertical: 0 },
+  searchWrap: { position: 'absolute', alignSelf: 'center', width: '82%' },
+  search: { height: 52, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg },
+  input: { flex: 1, fontFamily: font.uiMedium, fontSize: 16, color: onGlass.fg, paddingVertical: 0 },
 }));

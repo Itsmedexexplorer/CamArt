@@ -67,7 +67,7 @@ function stickerWebp(img: SkImage) {
 }
 
 /** Sends the newest stickers (3–30) to WhatsApp as one "CamArt" pack. Re-sending updates it. */
-export async function sendToWhatsApp(renderedUris: string[]) {
+export async function sendToWhatsApp(renderedUris: string[]): Promise<'added' | 'cancelled'> {
   if (!Native) throw new Error('Sticker packs need the CamArt app build, not Expo Go.');
   const uris = renderedUris.slice(0, 30);
   if (uris.length < 3) throw new Error('WhatsApp packs need at least 3 stickers. Make a few more first.');
@@ -90,15 +90,15 @@ export async function sendToWhatsApp(renderedUris: string[]) {
         stickers: webps.map((_, i) => ({ image_file: `${i + 1}.webp`, emojis: ['✨'], accessibility_text: 'CamArt sticker' })),
       }),
     );
-    await Native.addToWhatsApp(PACK_ID, name);
-  } else {
-    await Native.sendWhatsAppPack(
+    return Native.addToWhatsApp(PACK_ID, name);
+  }
+  await Native.sendWhatsAppPack(
       JSON.stringify({
         identifier: PACK_ID, name, publisher: 'CamArt', tray_image: toBase64(tray), ios_app_store_link: '', android_play_store_link: '',
         stickers: webps.map((b) => ({ image_data: toBase64(b), emojis: ['✨'] })),
       }),
     );
-  }
+  return 'added' as const;
 }
 
 /** Base64 without Buffer (not in React Native). */

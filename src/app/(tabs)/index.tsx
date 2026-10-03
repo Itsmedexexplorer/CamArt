@@ -1,5 +1,4 @@
 import { Canvas, Group, LinearGradient, Path, PathOp, Shader, Shadow, Skia, vec } from '@shopify/react-native-skia';
-import { BlurTargetView } from 'expo-blur';
 import { CameraView, useCameraPermissions, type FlashMode } from 'expo-camera';
 import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -54,7 +53,6 @@ export default function CameraScreen() {
 
 function Camera() {
   const cam = useRef<CameraView>(null);
-  const target = useRef<View>(null);
   const insets = useSafeAreaInsets();
   const tabSpace = useTabSpace();
   const reduce = useReducedMotion();
@@ -63,6 +61,7 @@ function Camera() {
   const [box, setBox] = useState({ w: 0, h: 0 });
   const [facing, setFacing] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<FlashMode>('off');
+  const [torch, setTorch] = useState(false);
   const [shape, setShape] = useState<Shape>('stamp');
   const [ready, setReady] = useState(false);
   const [zoom, setZoom] = useState(0);
@@ -125,7 +124,14 @@ function Camera() {
       flashO.set(withTiming(1, { duration: 60 }));
       await new Promise((r) => setTimeout(r, 260));
     } else flashO.set(withSequence(withTiming(0.9, { duration: 0 }), withTiming(0, { duration: motion.flash })));
+    // "On" lights the LED as a torch for a beat before the shot: the capture-time flash alone is
+    // unreliable on many Android phones, and the beat also lets exposure settle on the lit scene.
+    const ledFlash = facing === 'back' && flash === 'on';
     try {
+      if (ledFlash) {
+        setTorch(true);
+        await new Promise((r) => setTimeout(r, 450));
+      }
       const pic = await cam.current.takePictureAsync({ quality: 0.92 });
       if (screenFlash) flashO.set(withTiming(0, { duration: 160 }));
       // Map the on-screen frame into photo pixels (preview is aspect-fill).
@@ -139,6 +145,7 @@ function Camera() {
       haptic.error();
       Alert.alert('Could not take photo', e instanceof Error ? e.message : 'Try again.');
     } finally {
+      setTorch(false);
       busy.current = false;
     }
   }
@@ -173,17 +180,16 @@ function Camera() {
   return (
     <View style={s.fill} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
       <StatusBar style="light" />
-      <BlurTargetView ref={target} style={StyleSheet.absoluteFill}>
-        <CameraView
-          ref={cam}
-          style={StyleSheet.absoluteFill}
-          facing={facing}
-          flash={facing === 'back' ? flash : 'off'}
-          mirror={facing === 'front'}
-          zoom={zoom}
-          onCameraReady={() => setReady(true)}
-        />
-      </BlurTargetView>
+      <CameraView
+        ref={cam}
+        style={StyleSheet.absoluteFill}
+        facing={facing}
+        flash={facing === 'back' && flash === 'auto' ? 'auto' : 'off'}
+        enableTorch={torch}
+        mirror={facing === 'front'}
+        zoom={zoom}
+        onCameraReady={() => setReady(true)}
+      />
 
       {frame && (
         <>
@@ -225,14 +231,14 @@ function Camera() {
       </GestureDetector>
 
       <View style={[s.top, { paddingTop: insets.top + space.sm }]}>
-        <Button round tone="glassDark" target={target} icon={FlashI} a11y={`Flash ${flash}`} onPress={() => setFlash(FLASH_NEXT[flash])} />
-        <Glass dark target={target} style={s.dateChip}>
+        <Button round tone="glass" icon={FlashI} a11y={`Flash ${flash}`} onPress={() => setFlash(FLASH_NEXT[flash])} />
+        <Glass style={s.dateChip}>
           <Text style={s.date}>{new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
           <View style={s.countDot}>
             <Text style={s.countNum}>{today}</Text>
           </View>
         </Glass>
-        <Button round tone="glassDark" target={target} icon={Flip} a11y="Flip camera" onPress={() => (setFacing(facing === 'back' ? 'front' : 'back'), zoomTo(0))} />
+        <Button round tone="glass" icon={Flip} a11y="Flip camera" onPress={() => (setFacing(facing === 'back' ? 'front' : 'back'), zoomTo(0))} />
       </View>
       {flash !== 'off' && (
         <Text style={[s.kicker, { position: 'absolute', alignSelf: 'center', top: insets.top + 60 }]}>{facing === 'front' ? 'Screen flash' : `Flash ${flash}`}</Text>
@@ -246,7 +252,7 @@ function Camera() {
         {box.w > 0 && <ShapeDial width={box.w} value={shape} onChange={pickShape} />}
         <View style={s.row}>
           <Pressable onPress={cycleZoom} accessibilityRole="button" accessibilityLabel={`Zoom ${zoomLabel}, tap to change`} hitSlop={6}>
-            <Glass dark target={target} style={s.side}>
+            <Glass style={s.side}>
               <Text style={s.zoomText}>{zoomLabel}</Text>
             </Glass>
           </Pressable>

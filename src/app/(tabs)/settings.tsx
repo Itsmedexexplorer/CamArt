@@ -26,6 +26,20 @@ export default function Settings() {
   const memories = useMemories();
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const busy = status.kind === 'busy';
+  const [pack, setPack] = useState<{ busy?: boolean; text?: string; ok?: boolean }>({});
+
+  async function addPack() {
+    if (memories.length < 3) return setPack({ text: `Make ${3 - memories.length} more ${memories.length === 2 ? 'sticker' : 'stickers'} first: WhatsApp packs need at least 3.` });
+    setPack({ busy: true, text: 'Preparing your pack…' });
+    try {
+      const r = await sendToWhatsApp(memories.map((m) => uriOf(m.rendered)));
+      if (r === 'added') haptic.success();
+      setPack(r === 'added' ? { ok: true, text: 'Added. Find it in WhatsApp under Stickers → CamArt.' } : { text: 'Not added. Tap again whenever you’re ready.' });
+    } catch (e) {
+      haptic.error();
+      setPack({ text: e instanceof Error ? e.message : 'Could not create the pack.' });
+    }
+  }
 
   async function backup() {
     setStatus({ kind: 'busy', text: 'Packing your stickers…' });
@@ -117,15 +131,16 @@ export default function Settings() {
             <Badge I={Share} tint="#FFFFFF" />
             <View style={{ flex: 1 }}>
               <Text style={[ty.title, { color: c.onAccent }]}>Sticker pack</Text>
-              <Text style={[ty.meta, { color: c.onAccent }]}>Your newest stickers (up to 30) as a WhatsApp pack. Send again to update it.</Text>
+              <Text style={[ty.meta, { color: c.onAccent }]}>Your 30 newest stickers become one “CamArt” pack in WhatsApp. Made more? Tap again to refresh it.</Text>
             </View>
           </View>
-          <Button label="Add to WhatsApp" tone="ink" disabled={memories.length < 3} onPress={() =>
-            sendToWhatsApp(memories.map((m) => uriOf(m.rendered))).catch((e) => {
-              haptic.error();
-              setStatus({ kind: 'error', text: e instanceof Error ? e.message : 'Could not create the pack.', retry: () => {} });
-            })
-          } />
+          <Button label={pack.busy ? 'Preparing…' : 'Add to WhatsApp'} tone="ink" disabled={pack.busy} onPress={addPack} />
+          {pack.text && (
+            <View style={[s.status, pack.ok && { backgroundColor: c.lime }]} accessibilityLiveRegion="polite">
+              {pack.busy ? <Loader size={24} /> : pack.ok ? <Check size={20} color={c.onAccent} weight="bold" /> : null}
+              <Text style={[ty.body, { flex: 1 }, pack.ok && { color: c.onAccent }]}>{pack.text}</Text>
+            </View>
+          )}
         </View>
       )}
 

@@ -1,5 +1,6 @@
 package expo.modules.camartnative
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
@@ -18,6 +19,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 class CamartNativeModule : Module() {
+  private var pendingPack: Promise? = null
   private val context get() = requireNotNull(appContext.reactContext) { "No React context" }
 
   override fun definition() = ModuleDefinition {
@@ -47,17 +49,35 @@ class CamartNativeModule : Module() {
       Unit
     }
 
-    AsyncFunction("addToWhatsApp") { id: String, name: String ->
-      val activity = appContext.currentActivity ?: throw CodedException("ERR_NO_ACTIVITY", "App is not in the foreground", null)
+    // Resolves "added" / "cancelled", or rejects with WhatsApp's own validation message.
+    AsyncFunction("addToWhatsApp") { id: String, name: String, promise: Promise ->
+      val activity = appContext.currentActivity
+        ?: return@AsyncFunction promise.reject(CodedException("ERR_NO_ACTIVITY", "App is not in the foreground", null))
       val intent = Intent("com.whatsapp.intent.action.ENABLE_STICKER_PACK").apply {
         putExtra("sticker_pack_id", id)
         putExtra("sticker_pack_authority", "${context.packageName}.stickercontentprovider")
         putExtra("sticker_pack_name", name)
       }
       try {
-        activity.startActivityForResult(intent, 2001)
+        pendingPack?.reject(CodedException("ERR_REPLACED", "Replaced by a newer request", null))
+        pendingPack = promise
+        activity.startActivityForResult(intent, PACK_REQUEST)
       } catch (e: ActivityNotFoundException) {
-        throw CodedException("ERR_NO_WHATSAPP", "WhatsApp is not installed", e)
+        pendingPack = null
+        promise.reject(CodedException("ERR_NO_WHATSAPP", "WhatsApp is not installed", e))
+      }
+      Unit
+    }
+
+    OnActivityResult { _, payload ->
+      if (payload.requestCode != PACK_REQUEST) return@OnActivityResult
+      val p = pendingPack ?: return@OnActivityResult
+      pendingPack = null
+      val error = payload.data?.getStringExtra("validation_error")
+      when {
+        payload.resultCode == Activity.RESULT_OK -> p.resolve("added")
+        error != null -> p.reject(CodedException("ERR_WHATSAPP", error, null))
+        else -> p.resolve("cancelled")
       }
     }
 
@@ -80,5 +100,9 @@ class CamartNativeModule : Module() {
       else -> 0f
     }
     return if (deg == 0f) bmp else Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, Matrix().apply { postRotate(deg) }, true)
+  }
+
+  companion object {
+    private const val PACK_REQUEST = 2001
   }
 }
