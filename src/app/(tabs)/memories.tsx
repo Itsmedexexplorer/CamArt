@@ -10,7 +10,7 @@ import { FILTER_LABEL, SHAPE_LABEL, type Filter, type Shape } from '@/lib/sticke
 import { font, radius, space, themed, useTheme, bouncy } from '@/theme';
 import { DayShelf } from '@/ui/day-shelf';
 import { Close, Search } from '@/ui/icons';
-import { Button, Empty, Glass, onGlass, Sticker } from '@/ui/puffy';
+import { Button, Empty, Glass, Sticker, useGlassInk } from '@/ui/puffy';
 import { useTabSpace } from '@/ui/tab-bar';
 
 /** Everything a person might type to find a memory: note, shape, filter, and the day in words. */
@@ -26,7 +26,8 @@ function haystack(m: Memory) {
 }
 
 export default function Memories() {
-  const { c, ty } = useTheme();
+  const { c, ty, scheme } = useTheme();
+  const ink = useGlassInk();
   const s = useStyles();
   const memories = useMemories();
   const insets = useSafeAreaInsets();
@@ -94,21 +95,21 @@ export default function Memories() {
       {memories.length > 0 && (
         <Animated.View style={[s.searchWrap, searchLift]}>
         <Glass target={target} style={s.search}>
-          <Search size={20} color={onGlass.fg} weight="bold" />
+          <Search size={20} color={ink.fg} weight="bold" />
           <TextInput
             value={q}
             onChangeText={setQ}
             placeholder="Search notes, days, shapes"
-            placeholderTextColor={onGlass.soft}
+            placeholderTextColor={ink.soft}
             selectionColor={c.lime}
-            keyboardAppearance="dark"
+            keyboardAppearance={scheme}
             returnKeyType="search"
-            style={s.input}
+            style={[s.input, { color: ink.fg }]}
             accessibilityLabel="Search memories"
           />
           {q ? (
             <Pressable onPress={() => setQ('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Clear search">
-              <Close size={18} color={onGlass.fg} weight="bold" />
+              <Close size={18} color={ink.fg} weight="bold" />
             </Pressable>
           ) : null}
         </Glass>
@@ -121,5 +122,5 @@ export default function Memories() {
 const useStyles = themed((c, ty) => StyleSheet.create({
   searchWrap: { position: 'absolute', alignSelf: 'center', width: '82%' },
   search: { height: 52, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg },
-  input: { flex: 1, fontFamily: font.uiMedium, fontSize: 16, color: onGlass.fg, paddingVertical: 0 },
+  input: { flex: 1, fontFamily: font.uiMedium, fontSize: 16, color: c.ink, paddingVertical: 0 },
 }));

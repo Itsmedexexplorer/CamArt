@@ -231,14 +231,14 @@ function Camera() {
       </GestureDetector>
 
       <View style={[s.top, { paddingTop: insets.top + space.sm }]}>
-        <Button round tone="glass" icon={FlashI} a11y={`Flash ${flash}`} onPress={() => setFlash(FLASH_NEXT[flash])} />
-        <Glass style={s.dateChip}>
+        <Button round tone="glass" camera icon={FlashI} a11y={`Flash ${flash}`} onPress={() => setFlash(FLASH_NEXT[flash])} />
+        <Glass camera style={s.dateChip}>
           <Text style={s.date}>{new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
           <View style={s.countDot}>
             <Text style={s.countNum}>{today}</Text>
           </View>
         </Glass>
-        <Button round tone="glass" icon={Flip} a11y="Flip camera" onPress={() => (setFacing(facing === 'back' ? 'front' : 'back'), zoomTo(0))} />
+        <Button round tone="glass" camera icon={Flip} a11y="Flip camera" onPress={() => (setFacing(facing === 'back' ? 'front' : 'back'), zoomTo(0))} />
       </View>
       {flash !== 'off' && (
         <Text style={[s.kicker, { position: 'absolute', alignSelf: 'center', top: insets.top + 60 }]}>{facing === 'front' ? 'Screen flash' : `Flash ${flash}`}</Text>
@@ -252,7 +252,7 @@ function Camera() {
         {box.w > 0 && <ShapeDial width={box.w} value={shape} onChange={pickShape} />}
         <View style={s.row}>
           <Pressable onPress={cycleZoom} accessibilityRole="button" accessibilityLabel={`Zoom ${zoomLabel}, tap to change`} hitSlop={6}>
-            <Glass style={s.side}>
+            <Glass camera style={s.side}>
               <Text style={s.zoomText}>{zoomLabel}</Text>
             </Glass>
           </Pressable>

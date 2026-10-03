@@ -1,4 +1,5 @@
 import { Canvas, ColorMatrix, createPicture, Group, Image as SkImg, Paint, Picture, RuntimeShader, Skia, useTypeface, type SkImage, type SkTypeface } from '@shopify/react-native-skia';
+import { BlurTargetView } from 'expo-blur';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, PixelRatio, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
@@ -162,6 +163,8 @@ export default function Editor() {
       { text: 'Discard', style: 'destructive', onPress: () => router.back() },
     ]);
 
+  const glassTarget = useRef<View>(null); // what the close button's frost blurs on Android
+
   const pick = <T,>(set: (v: T) => void, cur: T) => (v: T) => {
     if (v === cur) return;
     set(v);
@@ -170,9 +173,11 @@ export default function Editor() {
 
   return (
     <KeyboardAvoidingView behavior="padding" style={[s.screen, { paddingTop: insets.top }]}>
-      <Backdrop tint={edge === 'paper' || edge === 'ink' ? c.sand : EDGES[edge]} width={width} height={height} />
+      <BlurTargetView ref={glassTarget} style={StyleSheet.absoluteFill}>
+        <Backdrop tint={edge === 'paper' || edge === 'ink' ? c.sand : EDGES[edge]} width={width} height={height} />
+      </BlurTargetView>
       <View style={s.header}>
-        <Button round tone="glass" icon={Close} a11y="Discard photo" onPress={close} />
+        <Button round tone="glass" target={glassTarget} icon={Close} a11y="Discard photo" onPress={close} />
         <View style={{ alignItems: 'center' }}>
           <Text style={ty.label}>New sticker</Text>
           <Text style={[ty.title, { fontSize: 22, lineHeight: 26 }]}>{date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</Text>

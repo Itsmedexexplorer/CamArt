@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { color, font, space, themed, useTheme } from '@/theme';
 import { Aperture, CalendarDots, GearSix, Sticker, type IconType } from '@/ui/icons';
-import { Glass, onGlass } from '@/ui/puffy';
+import { Glass, useGlassInk } from '@/ui/puffy';
 
 const TABS: { path: '/' | '/memories' | '/calendar' | '/settings'; label: string; I: IconType; tint: string }[] = [
   { path: '/', label: 'Camera', I: Aperture, tint: color.cherry },
@@ -28,6 +28,7 @@ export function TabBar({ target }: { target: RefObject<View | null> }) {
   const s = useStyles();
   const insets = useSafeAreaInsets();
   const path = usePathname();
+  const ink = useGlassInk();
   return (
     <View style={[s.wrap, { bottom: insets.bottom + space.md }]} pointerEvents="box-none">
       <Glass target={target} style={s.bar}>
@@ -39,7 +40,7 @@ export function TabBar({ target }: { target: RefObject<View | null> }) {
                 <Pill tint={tab.tint} I={tab.I} label={tab.label} />
               ) : (
                 <View style={s.item}>
-                  <tab.I size={27} weight="fill" color={onGlass.soft} />
+                  <tab.I size={27} weight="fill" color={ink.soft} />
                 </View>
               )}
             </Pressable>
