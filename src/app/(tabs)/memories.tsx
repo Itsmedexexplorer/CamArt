@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { byDay, useMemories, type Memory } from '@/lib/memories';
 import { FILTER_LABEL, SHAPE_LABEL, type Filter, type Shape } from '@/lib/sticker';
 import { font, radius, space, themed, useTheme, bouncy } from '@/theme';
-import { Ambient } from '@/ui/ambient';
 import { DayShelf } from '@/ui/day-shelf';
 import { Close, Search } from '@/ui/icons';
 import { Button, Empty, Glass, Sticker, useGlassInk } from '@/ui/puffy';
@@ -48,8 +47,7 @@ export default function Memories() {
 
   return (
     <View style={{ flex: 1 }}>
-      <BlurTargetView ref={target} style={{ flex: 1 }}>
-        <Ambient />
+      <BlurTargetView ref={target} style={{ flex: 1, backgroundColor: c.milk }}>
         {hits ? (
           <FlatList
             key="hits"

@@ -2,8 +2,7 @@ import Constants from 'expo-constants';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { color, font, glass, radius, space, themed, useTheme } from '@/theme';
-import { Ambient } from '@/ui/ambient';
+import { color, font, radius, space, themed, useTheme } from '@/theme';
 import { Doc, Info as InfoI, Shield, type IconType } from '@/ui/icons';
 
 type Page = { title: string; kicker: string; tint: string; I: IconType; lead: string; points: [string, string][] };
@@ -46,8 +45,6 @@ export default function InfoScreen() {
   const { page } = useLocalSearchParams<{ page: string }>();
   const p = PAGES[page] ?? PAGES.about;
   return (
-    <View style={{ flex: 1 }}>
-    <Ambient />
     <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.lg, paddingBottom: space.xxl }}>
       <Stack.Screen options={{ title: '' }} />
       <View style={[s.hero, { backgroundColor: p.tint }]}>
@@ -66,12 +63,11 @@ export default function InfoScreen() {
         </View>
       ))}
     </ScrollView>
-    </View>
   );
 }
 
 const useStyles = themed((c, ty) => StyleSheet.create({
   hero: { borderRadius: radius.lg, padding: space.xl, gap: space.sm },
-  point: { flexDirection: 'row', gap: space.lg, padding: space.lg, borderRadius: radius.md, ...glass(c) },
+  point: { flexDirection: 'row', gap: space.lg, padding: space.lg, borderRadius: radius.md, backgroundColor: c.paper },
   num: { fontFamily: font.display, fontSize: 22, color: c.inkSoft, fontVariant: ['tabular-nums'] },
 }));

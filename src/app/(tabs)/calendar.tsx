@@ -8,7 +8,7 @@ import { useTabSpace } from '@/ui/tab-bar';
 
 import { onThisDay, streak } from '@/lib/journal';
 import { byDay, dayKey, useMemories, type Memory } from '@/lib/memories';
-import { font, glass, motion, radius, space, themed, tintGlass, useTheme } from '@/theme';
+import { font, motion, radius, space, themed, useTheme } from '@/theme';
 import { DayShelf } from '@/ui/day-shelf';
 import { Next, Prev } from '@/ui/icons';
 import { Button, Sticker } from '@/ui/puffy';
@@ -16,7 +16,7 @@ import { Button, Sticker } from '@/ui/puffy';
 const WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export default function Calendar() {
-  const { c, ty, scheme } = useTheme();
+  const { c, ty } = useTheme();
   const s = useStyles();
   const insets = useSafeAreaInsets();
   const tabSpace = useTabSpace();
@@ -55,15 +55,15 @@ export default function Calendar() {
       </View>
 
       <View style={s.statRow}>
-        <View style={[s.stat, { backgroundColor: tintGlass(c.lime, scheme) }]}>
+        <View style={[s.stat, { backgroundColor: c.lime }]}>
           <Text style={s.statNum}>{filled}</Text>
           <Text style={s.statLabel}>days stuck</Text>
         </View>
-        <View style={[s.stat, { backgroundColor: tintGlass(c.lilac, scheme) }]}>
+        <View style={[s.stat, { backgroundColor: c.lilac }]}>
           <Text style={s.statNum}>{cells.reduce((n, d) => n + (d ? days.get(dayKey(d))?.length ?? 0 : 0), 0)}</Text>
           <Text style={s.statLabel}>stickers</Text>
         </View>
-        <View style={[s.stat, { backgroundColor: tintGlass(c.sun, scheme) }]}>
+        <View style={[s.stat, { backgroundColor: c.sun }]}>
           <Text style={s.statNum}>{run.days}</Text>
           <Text style={s.statLabel}>{run.days && !run.alive ? 'streak · stick one today' : 'day streak'}</Text>
         </View>
@@ -141,12 +141,12 @@ function Day({ d, size, items, isToday, selected, onPress }: { d: Date; size: nu
 const useStyles = themed((c, ty) => StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.lg },
   statRow: { flexDirection: 'row', gap: space.sm, paddingHorizontal: space.lg, paddingBottom: space.xl },
-  past: { marginHorizontal: space.lg, marginBottom: space.xl, padding: space.lg, borderRadius: radius.lg, ...glass(c), gap: 2 },
-  stat: { flex: 1, borderRadius: radius.lg, padding: space.lg, gap: 2 , borderWidth: 1, borderColor: c.glassEdge },
+  past: { marginHorizontal: space.lg, marginBottom: space.xl, padding: space.lg, borderRadius: radius.lg, backgroundColor: c.paper, gap: 2 },
+  stat: { flex: 1, borderRadius: radius.lg, padding: space.lg, gap: 2 },
   statNum: { fontFamily: font.display, fontSize: 34, lineHeight: 38, color: c.onAccent, fontVariant: ['tabular-nums'] },
   statLabel: { fontFamily: font.uiBold, fontSize: 13, color: c.onAccent },
   grid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: space.md },
-  day: { flex: 1, borderRadius: radius.sm + 4, alignItems: 'center', justifyContent: 'center', backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge },
+  day: { flex: 1, borderRadius: radius.sm + 4, alignItems: 'center', justifyContent: 'center', backgroundColor: c.wash },
   dayFull: { backgroundColor: 'transparent' },
   selected: { backgroundColor: c.ink },
   center: { alignItems: 'center', justifyContent: 'center' },

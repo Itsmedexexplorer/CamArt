@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { haptic } from '@/lib/haptics';
 import { deleteMemory, fileOf, stickerPng, useMemories } from '@/lib/memories';
 import { EDGES, FILTER_LABEL, SHAPE_LABEL, type Edge, type Filter, type Shape } from '@/lib/sticker';
-import { font, glass, radius, space, themed, useTheme, settle } from '@/theme';
+import { font, radius, space, themed, useTheme, settle } from '@/theme';
 import { Backdrop } from '@/ui/backdrop';
 import { useTilt } from '@/ui/tilt';
 import { Check, Copy, Share, Trash } from '@/ui/icons';
@@ -120,7 +120,7 @@ export default function MemoryScreen() {
 const useStyles = themed((c, ty) => StyleSheet.create({
   body: { paddingHorizontal: space.lg, gap: space.lg },
   chips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.sm },
-  chip: { paddingHorizontal: space.md, height: 34, borderRadius: 17, ...glass(c), justifyContent: 'center' },
+  chip: { paddingHorizontal: space.md, height: 34, borderRadius: 17, backgroundColor: c.paper, justifyContent: 'center' },
   chipText: { fontFamily: font.uiBold, fontSize: 13, color: c.ink },
   bar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: space.lg, paddingTop: space.md, gap: space.sm },
   toast: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.lime, borderRadius: radius.pill, paddingHorizontal: space.lg, paddingVertical: space.sm },
