@@ -1,8 +1,6 @@
-import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
-import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
-import { useState, type ReactNode, type RefObject } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
 
 import { uriOf, type Memory } from '@/lib/memories';
@@ -11,10 +9,10 @@ import { font, hit, lift, motion, radius, space, themed, useTheme, type Palette,
 import type { IconType } from '@/ui/icons';
 import { ShapeArt } from '@/ui/shape-art';
 
-type Tone = 'cherry' | 'ink' | 'soft' | 'glass';
+type Tone = 'cherry' | 'ink' | 'soft' | 'surface';
 const tones = (c: Palette) => ({
-  bg: { cherry: c.cherry, ink: c.ink, soft: c.wash, glass: 'transparent' } as Record<Tone, string>,
-  fg: { cherry: '#FFFFFF', ink: c.milk, soft: c.ink, glass: c.ink } as Record<Tone, string>,
+  bg: { cherry: c.cherry, ink: c.ink, soft: c.wash, surface: c.paper } as Record<Tone, string>,
+  fg: { cherry: '#FFFFFF', ink: c.milk, soft: c.ink, surface: c.ink } as Record<Tone, string>,
 });
 
 /** Press physics shared by every tactile surface: a quick squeeze to 0.96. */
@@ -28,81 +26,33 @@ function usePress() {
   };
 }
 
-/**
- * The one glass for every floating control: Apple's frosted material (pre-Liquid Glass).
- * A real blur of what's behind, a thin scheme-aware veil and a hairline edge. No fake shine.
- * iOS uses the system's own thin material. Android blurs a BlurTargetView (`target`), with a
- * slightly denser veil if no target is given, so blurred and unblurred glass still match.
- * `camera`: over the live viewfinder nothing can be blurred on Android (the preview is a
- * SurfaceView), so it's the Camera app's own treatment: a dark translucent veil, white content.
- */
-export function Glass({ children, style, target, camera }: { children?: ReactNode; style?: StyleProp<ViewStyle>; target?: RefObject<View | null>; camera?: boolean }) {
-  const dark = useTheme().scheme === 'dark';
-  if (camera) return <CameraGlass style={style}>{children}</CameraGlass>;
-  const ios = Platform.OS === 'ios';
-  const veil = dark ? `rgba(30,30,34,${target ? 0.42 : 0.7})` : `rgba(250,249,245,${target ? 0.5 : 0.78})`;
+/** Floating surface for controls (tab bar, search, camera buttons): solid, theme-aware, soft shadow. */
+export function Surface({ children, style }: { children?: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const { c, scheme } = useTheme();
   return (
-    <BlurView
-      intensity={ios ? 100 : 70}
-      tint={ios ? (dark ? 'systemThinMaterialDark' : 'systemThinMaterialLight') : dark ? 'dark' : 'light'}
-      blurMethod={target ? 'dimezisBlurViewSdk31Plus' : 'none'}
-      blurTarget={target}
+    <View
       style={[
-        { overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)' },
-        !ios && { backgroundColor: veil },
+        {
+          backgroundColor: c.paper,
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: c.line,
+          boxShadow: scheme === 'dark' ? '0px 6px 18px rgba(0,0,0,0.45)' : '0px 6px 18px rgba(24,32,51,0.10)',
+        },
         style,
       ]}>
-      {children}
-    </BlurView>
-  );
-}
-
-/**
- * Glass over the live viewfinder (pills and circles). The preview can't be blurred on Android, so
- * the pane is drawn the way light actually reads on glass: a clear pane a touch brighter than the
- * smoked surround, a top sheen, a rim lit at the top and faintly at the bottom, and a soft shadow.
- */
-function CameraGlass({ children, style }: { children?: ReactNode; style?: StyleProp<ViewStyle> }) {
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const { w, h } = size, r = h / 2;
-  return (
-    <View style={[{ boxShadow: '0px 4px 14px rgba(0,0,0,0.28)' }, style]}
-      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      {w > 0 && (
-        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-          <RoundedRect x={0} y={0} width={w} height={h} r={r} color="rgba(255,255,255,0.13)" />
-          <RoundedRect x={0} y={0} width={w} height={h} r={r}>
-            <LinearGradient start={vec(0, 0)} end={vec(0, h)} colors={['rgba(255,255,255,0.30)', 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.10)']} positions={[0, 0.45, 0.6, 1]} />
-          </RoundedRect>
-          <RoundedRect x={0.75} y={0.75} width={w - 1.5} height={h - 1.5} r={r - 0.75} style="stroke" strokeWidth={1.5}>
-            <LinearGradient start={vec(0, 0)} end={vec(0, h)} colors={['rgba(255,255,255,0.85)', 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.40)']} positions={[0, 0.55, 1]} />
-          </RoundedRect>
-        </Canvas>
-      )}
       {children}
     </View>
   );
 }
 
-/** Ink for content on Glass: dark on light frost, white on dark frost and over the camera. */
-export function useGlassInk(camera?: boolean) {
-  const { c, scheme } = useTheme();
-  return camera || scheme === 'dark' ? { fg: '#FFFFFF', soft: 'rgba(255,255,255,0.6)' } : { fg: c.ink, soft: 'rgba(24,32,51,0.55)' };
-}
-
 export function Button({
-  label, icon: I, onPress, tone = 'soft', disabled, round, a11y, style, target, camera,
+  label, icon: I, onPress, tone = 'soft', disabled, round, a11y, style,
 }: {
-  camera?: boolean; // glass over the live camera
   label?: string; icon?: IconType; onPress: () => void; tone?: Tone; disabled?: boolean; round?: boolean; a11y?: string; style?: StyleProp<ViewStyle>;
-  target?: RefObject<View | null>; // what a glass button blurs (Android needs it for real blur)
 }) {
   const { bg, fg } = tones(useTheme().c);
-  const ink = useGlassInk(camera);
-  if (tone === 'glass') fg.glass = ink.fg;
   const s = useStyles();
   const { style: pressStyle, handlers } = usePress();
-  const glass = tone === 'glass';
   const content = (
     <>
       {I && <I size={22} color={fg[tone]} weight={round ? 'bold' : 'fill'} />}
@@ -119,8 +69,8 @@ export function Button({
       accessibilityState={{ disabled }}
       style={[{ opacity: disabled ? 0.45 : 1 }, style]}>
       <Animated.View style={[(tone === 'cherry' || tone === 'ink') && lift, pressStyle]}>
-        {glass ? (
-          <Glass target={target} camera={camera} style={[s.face, round && s.round]}>{content}</Glass>
+        {tone === 'surface' ? (
+          <Surface style={[s.face, round && s.round]}>{content}</Surface>
         ) : (
           <View style={[s.face, round && s.round, { backgroundColor: bg[tone] }]}>{content}</View>
         )}

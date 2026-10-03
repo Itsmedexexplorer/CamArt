@@ -1,7 +1,6 @@
-import { Canvas, Group, LinearGradient, Path, PathOp, Shader, Shadow, Skia, vec } from '@shopify/react-native-skia';
+import { Canvas, Path, PathOp, Shadow, Skia } from '@shopify/react-native-skia';
 import { CameraView, useCameraPermissions, type FlashMode } from 'expo-camera';
 import { router, useFocusEffect } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -10,24 +9,25 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { haptic } from '@/lib/haptics';
 import { dayKey, keepOriginal, useMemories } from '@/lib/memories';
-import { EDGES, grainEffect, SHAPE_EDGE, SHAPE_LABEL, shapePath, windowPath, type Shape } from '@/lib/sticker';
-import { settle, color, font, motion, space, useTheme } from '@/theme';
+import { EDGES, SHAPE_EDGE, SHAPE_LABEL, shapePath, windowPath, type Shape } from '@/lib/sticker';
+import { settle, font, motion, space, themed, useTheme } from '@/theme';
 import { Flash, FlashAuto, FlashOff, Flip } from '@/ui/icons';
-import { Button, Empty, Glass } from '@/ui/puffy';
+import { Button, Empty, Surface } from '@/ui/puffy';
 import { ShapeDial } from '@/ui/shape-dial';
 import { useTabSpace } from '@/ui/tab-bar';
 
 const FLASH_NEXT: Record<FlashMode, FlashMode> = { off: 'auto', auto: 'on', on: 'off', screen: 'off' };
 const FLASH_ICON = { off: FlashOff, auto: FlashAuto, on: Flash, screen: Flash };
-const WHITE = color.paper;
-const WHITE_SOFT = 'rgba(255,255,255,0.72)';
 // ponytail: CameraView zoom is 0..1 across the device's range; these assume ~8x max. Calibrate per device if labels drift.
 const ZOOMS = [{ label: '1×', z: 0 }, { label: '2×', z: 0.14 }, { label: '3×', z: 0.29 }];
-const NAME_H = 40, DIAL_H = 76, ROW_H = 84;
+const NAME_H = 40, ROW_H = 84;
+const RING_R = 106; // shape ring radius around the shutter
+const RING_UP = RING_R + 34; // how far the ring reaches above the shutter's centre
 
 export default function CameraScreen() {
   const [perm, requestPerm] = useCameraPermissions();
   const { c } = useTheme();
+  const s = useStyles();
   const [focused, setFocused] = useState(true);
   useFocusEffect(useCallback(() => (setFocused(true), () => setFocused(false)), []));
 
@@ -52,6 +52,8 @@ export default function CameraScreen() {
 }
 
 function Camera() {
+  const { c } = useTheme();
+  const s = useStyles();
   const cam = useRef<CameraView>(null);
   const insets = useSafeAreaInsets();
   const tabSpace = useTabSpace();
@@ -73,7 +75,7 @@ function Camera() {
   // Vertical rhythm: top bar | frame | name | dial | shutter row | tab bar. Leftover space is split
   // evenly above and below the frame so nothing crowds.
   const top = insets.top + 72;
-  const below = NAME_H + DIAL_H + ROW_H + space.lg * 3;
+  const below = NAME_H + RING_UP + ROW_H / 2 + space.lg * 3;
   const side = Math.max(Math.min(box.w * 0.84, box.h - top - below - tabSpace - space.lg), 150);
   const free = Math.max(box.h - top - side - below - tabSpace, 0);
   const cx = box.w / 2;
@@ -109,8 +111,7 @@ function Camera() {
 
   const pickShape = (sh: Shape) => {
     if (sh === shape) return;
-    setShape(sh);
-    haptic.select();
+    setShape(sh); // the dial ticks its own haptics
   };
 
   async function capture() {
@@ -179,7 +180,6 @@ function Camera() {
 
   return (
     <View style={s.fill} onLayout={(e) => setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
-      <StatusBar style="light" />
       <CameraView
         ref={cam}
         style={StyleSheet.absoluteFill}
@@ -193,32 +193,20 @@ function Camera() {
 
       {frame && (
         <>
-          {/* Smoked glass outside the frame: translucent tint, a breath of frost grain, a top sheen. */}
+          {/* Everything outside the frame is the page itself, so the camera shows only through the frame. */}
           <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-            {frame.glass && (
-              <>
-                <Path path={frame.glass} color="rgba(10,12,18,0.58)" />
-                <Group opacity={0.05} blendMode="overlay">
-                  <Path path={frame.glass}>
-                    <Shader source={grainEffect} uniforms={{ seed: 3.1 }} />
-                  </Path>
-                </Group>
-                <Path path={frame.glass}>
-                  <LinearGradient start={vec(0, 0)} end={vec(box.w * 0.4, box.h * 0.5)} colors={['rgba(255,255,255,0.10)', 'rgba(255,255,255,0)']} />
-                </Path>
-              </>
-            )}
+            {frame.glass && <Path path={frame.glass} color={c.milk} />}
           </Canvas>
           {/* The frame itself: lifted off the scene with a soft drop shadow. */}
           <Animated.View style={[StyleSheet.absoluteFill, { transformOrigin: [cx, cy, 0] }, frameStyle]} pointerEvents="none">
             <Canvas style={StyleSheet.absoluteFill}>
               {frame.band ? (
                 <Path path={frame.band} color={tint}>
-                  <Shadow dx={0} dy={8} blur={14} color="rgba(0,0,0,0.45)" />
+                  <Shadow dx={0} dy={6} blur={12} color="rgba(24,32,51,0.18)" />
                 </Path>
               ) : (
                 <Path path={frame.outline} color={tint} style="stroke" strokeWidth={12} strokeJoin="round">
-                  <Shadow dx={0} dy={8} blur={14} color="rgba(0,0,0,0.45)" />
+                  <Shadow dx={0} dy={6} blur={12} color="rgba(24,32,51,0.18)" />
                 </Path>
               )}
             </Canvas>
@@ -231,14 +219,14 @@ function Camera() {
       </GestureDetector>
 
       <View style={[s.top, { paddingTop: insets.top + space.sm }]}>
-        <Button round tone="glass" camera icon={FlashI} a11y={`Flash ${flash}`} onPress={() => setFlash(FLASH_NEXT[flash])} />
-        <Glass camera style={s.dateChip}>
+        <Button round tone="surface" icon={FlashI} a11y={`Flash ${flash}`} onPress={() => setFlash(FLASH_NEXT[flash])} />
+        <Surface style={s.dateChip}>
           <Text style={s.date}>{new Date().toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</Text>
           <View style={s.countDot}>
             <Text style={s.countNum}>{today}</Text>
           </View>
-        </Glass>
-        <Button round tone="glass" camera icon={Flip} a11y="Flip camera" onPress={() => (setFacing(facing === 'back' ? 'front' : 'back'), zoomTo(0))} />
+        </Surface>
+        <Button round tone="surface" icon={Flip} a11y="Flip camera" onPress={() => (setFacing(facing === 'back' ? 'front' : 'back'), zoomTo(0))} />
       </View>
       {flash !== 'off' && (
         <Text style={[s.kicker, { position: 'absolute', alignSelf: 'center', top: insets.top + 60 }]}>{facing === 'front' ? 'Screen flash' : `Flash ${flash}`}</Text>
@@ -248,13 +236,14 @@ function Camera() {
         <Text style={[s.name, { top: cy + side / 2 + space.lg }]} pointerEvents="none">{SHAPE_LABEL[shape]}</Text>
       )}
 
-      <View style={[s.bottom, { bottom: tabSpace + space.lg }]}>
-        {box.w > 0 && <ShapeDial width={box.w} value={shape} onChange={pickShape} />}
-        <View style={s.row}>
+      {box.w > 0 && <ShapeDial cx={box.w / 2} cy={box.h - tabSpace - space.lg - ROW_H / 2} R={RING_R} value={shape} onChange={pickShape} />}
+
+      <View style={[s.bottom, { bottom: tabSpace + space.lg }]} pointerEvents="box-none">
+        <View style={s.row} pointerEvents="box-none">
           <Pressable onPress={cycleZoom} accessibilityRole="button" accessibilityLabel={`Zoom ${zoomLabel}, tap to change`} hitSlop={6}>
-            <Glass camera style={s.side}>
+            <Surface style={s.side}>
               <Text style={s.zoomText}>{zoomLabel}</Text>
-            </Glass>
+            </Surface>
           </Pressable>
           <Pressable
             onPressIn={() => press.set(withTiming(1, { duration: motion.press }))}
@@ -266,7 +255,7 @@ function Camera() {
             style={s.shutter}>
             <Animated.View style={[s.shutterDisc, coreStyle]} />
           </Pressable>
-          <View style={{ width: 56 }} />
+          <View style={{ width: 56 }} pointerEvents="none" />
         </View>
       </View>
 
@@ -275,20 +264,20 @@ function Camera() {
   );
 }
 
-const s = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: '#0B0D12' },
+const useStyles = themed((c) => StyleSheet.create({
+  fill: { flex: 1, backgroundColor: c.milk },
   top: { position: 'absolute', left: 0, right: 0, paddingHorizontal: space.lg, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  kicker: { fontFamily: font.uiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: WHITE_SOFT },
+  kicker: { fontFamily: font.uiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: c.inkSoft },
   dateChip: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 48, borderRadius: 24, paddingLeft: space.lg, paddingRight: 6 },
-  date: { fontFamily: font.display, fontSize: 18, letterSpacing: -0.3, color: WHITE },
-  countDot: { minWidth: 36, height: 36, borderRadius: 18, paddingHorizontal: 8, backgroundColor: color.lime, alignItems: 'center', justifyContent: 'center' },
-  countNum: { fontFamily: font.display, fontSize: 16, color: color.ink },
-  zoomText: { fontFamily: font.display, fontSize: 17, color: WHITE },
-  name: { position: 'absolute', alignSelf: 'center', height: NAME_H, fontFamily: font.display, fontSize: 30, letterSpacing: -1, color: WHITE },
+  date: { fontFamily: font.display, fontSize: 18, letterSpacing: -0.3, color: c.ink },
+  countDot: { minWidth: 36, height: 36, borderRadius: 18, paddingHorizontal: 8, backgroundColor: c.lime, alignItems: 'center', justifyContent: 'center' },
+  countNum: { fontFamily: font.display, fontSize: 16, color: c.onAccent },
+  zoomText: { fontFamily: font.display, fontSize: 17, color: c.ink },
+  name: { position: 'absolute', alignSelf: 'center', height: NAME_H, fontFamily: font.display, fontSize: 30, letterSpacing: -1, color: c.ink },
   bottom: { position: 'absolute', left: 0, right: 0, alignItems: 'center', gap: space.lg },
   row: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xxl },
   // Pro shutter: thick white ring, a clear gap, solid white disc.
-  shutter: { width: 84, height: 84, borderRadius: 42, borderWidth: 5, borderColor: WHITE, alignItems: 'center', justifyContent: 'center' },
-  shutterDisc: { width: 64, height: 64, borderRadius: 32, backgroundColor: WHITE },
+  shutter: { width: 84, height: 84, borderRadius: 42, borderWidth: 5, borderColor: c.ink, alignItems: 'center', justifyContent: 'center' },
+  shutterDisc: { width: 64, height: 64, borderRadius: 32, backgroundColor: c.ink },
   side: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-});
+}));

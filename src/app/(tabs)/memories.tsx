@@ -1,6 +1,5 @@
-import { BlurTargetView } from 'expo-blur';
 import { router } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle, useReducedMotion, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +9,7 @@ import { FILTER_LABEL, SHAPE_LABEL, type Filter, type Shape } from '@/lib/sticke
 import { font, radius, space, themed, useTheme, bouncy } from '@/theme';
 import { DayShelf } from '@/ui/day-shelf';
 import { Close, Search } from '@/ui/icons';
-import { Button, Empty, Glass, Sticker, useGlassInk } from '@/ui/puffy';
+import { Button, Empty, Sticker, Surface } from '@/ui/puffy';
 import { useTabSpace } from '@/ui/tab-bar';
 
 /** Everything a person might type to find a memory: note, shape, filter, and the day in words. */
@@ -27,14 +26,12 @@ function haystack(m: Memory) {
 
 export default function Memories() {
   const { c, ty, scheme } = useTheme();
-  const ink = useGlassInk();
   const s = useStyles();
   const memories = useMemories();
   const insets = useSafeAreaInsets();
   const tabSpace = useTabSpace();
   const { width } = useWindowDimensions();
   const reduce = useReducedMotion();
-  const target = useRef<View>(null);
   const [q, setQ] = useState('');
   // Ride above the keyboard while typing, so the field and results stay visible.
   const kb = useAnimatedKeyboard();
@@ -47,7 +44,7 @@ export default function Memories() {
 
   return (
     <View style={{ flex: 1 }}>
-      <BlurTargetView ref={target} style={{ flex: 1, backgroundColor: c.milk }}>
+      <View style={{ flex: 1, backgroundColor: c.milk }}>
         {hits ? (
           <FlatList
             key="hits"
@@ -90,29 +87,28 @@ export default function Memories() {
             windowSize={5}
           />
         )}
-      </BlurTargetView>
+      </View>
 
       {memories.length > 0 && (
         <Animated.View style={[s.searchWrap, searchLift]}>
-        <Glass target={target} style={s.search}>
-          <Search size={20} color={ink.fg} weight="bold" />
+        <Surface style={s.search}>
+          <Search size={20} color={c.ink} weight="bold" />
           <TextInput
             value={q}
             onChangeText={setQ}
             placeholder="Search notes, days, shapes"
-            placeholderTextColor={ink.soft}
-            selectionColor={c.lime}
+            placeholderTextColor={c.inkSoft}
             keyboardAppearance={scheme}
             returnKeyType="search"
-            style={[s.input, { color: ink.fg }]}
+            style={[s.input, { color: c.ink }]}
             accessibilityLabel="Search memories"
           />
           {q ? (
             <Pressable onPress={() => setQ('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Clear search">
-              <Close size={18} color={ink.fg} weight="bold" />
+              <Close size={18} color={c.ink} weight="bold" />
             </Pressable>
           ) : null}
-        </Glass>
+        </Surface>
         </Animated.View>
       )}
     </View>
