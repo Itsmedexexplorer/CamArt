@@ -15,7 +15,7 @@ import {
   drawSticker, EDGES, EXPORT_VERSION, FILTER_LABEL, FILTER_MATRIX, FILTERS, GRAINS, loadCrop, renderSticker, S, SHAPE_EDGE, SHAPE_LABEL, SHAPES, stampText, textMetrics,
   type Edge, type Filter, type Look, type Shape, type TextItem, type TextSize,
 } from '@/lib/sticker';
-import { settle, font, lift, motion, radius, space, themed, useTheme } from '@/theme';
+import { settle, font, glass, motion, radius, space, themed, useTheme } from '@/theme';
 import { CalendarDots, Check, Close, Plus, Sparkle, Sticker, TextT, Trash } from '@/ui/icons';
 import { Button, Chip } from '@/ui/puffy';
 import { Backdrop } from '@/ui/backdrop';
@@ -373,16 +373,16 @@ const useStyles = themed((c, ty) => StyleSheet.create({
     backgroundColor: c.lime, borderRadius: 22, paddingHorizontal: space.lg, paddingVertical: space.md,
   },
   savedText: { fontFamily: font.display, fontSize: 18, color: c.onAccent },
-  sheet: { backgroundColor: c.paper, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingTop: space.lg, gap: space.md, ...lift },
-  seg: { flexDirection: 'row', marginHorizontal: space.lg, padding: 4, borderRadius: 22, backgroundColor: c.wash },
+  sheet: { ...glass(c), borderBottomWidth: 0, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, paddingTop: space.lg, gap: space.md },
+  seg: { flexDirection: 'row', marginHorizontal: space.lg, padding: 4, borderRadius: 22, backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge },
   segItem: { flex: 1, height: 40, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   segOn: { backgroundColor: c.ink },
   segText: { fontFamily: font.uiBold, fontSize: 13, color: c.ink },
-  segSmall: { flexDirection: 'row', padding: 3, borderRadius: 18, backgroundColor: c.wash },
+  segSmall: { flexDirection: 'row', padding: 3, borderRadius: 18, backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge },
   segSmallItem: { height: 34, paddingHorizontal: space.md, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   panel: { minHeight: 142, justifyContent: 'center' },
   tile: { alignItems: 'center', gap: 6, width: 70 },
-  tileFace: { width: 64, height: 64, borderRadius: 20, backgroundColor: c.wash, alignItems: 'center', justifyContent: 'center' },
+  tileFace: { width: 64, height: 64, borderRadius: 20, backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge, alignItems: 'center', justifyContent: 'center' },
   tileOn: { backgroundColor: c.ink },
   tileBare: { backgroundColor: 'transparent', borderWidth: 3, borderColor: 'transparent', width: 70, height: 70, borderRadius: 22 },
   tileBareOn: { borderColor: c.ink },
@@ -393,7 +393,7 @@ const useStyles = themed((c, ty) => StyleSheet.create({
   rail: { paddingHorizontal: space.lg, gap: space.sm },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.lg, gap: space.md },
   input: {
-    minHeight: 52, borderRadius: radius.md, backgroundColor: c.wash,
+    minHeight: 52, borderRadius: radius.md, backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge,
     paddingHorizontal: space.lg, fontFamily: font.uiMedium, fontSize: 17, color: c.ink,
   },
 }));

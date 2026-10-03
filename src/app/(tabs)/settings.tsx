@@ -10,7 +10,7 @@ import { haptic } from '@/lib/haptics';
 import { byDay, exportBackup, restoreBackup, storageBytes, uriOf, useMemories, type RestoreResult } from '@/lib/memories';
 import { hasNative, sendToWhatsApp } from '@/lib/native';
 import { setSettings, useSettings, type Appearance } from '@/lib/settings';
-import { font, hit, radius, space, themed, useTheme } from '@/theme';
+import { font, glass, hit, radius, space, themed, tintGlass, useTheme } from '@/theme';
 import { Archive, Check, Doc, Info, Lock, Moon, Share, Motion, Next, Restore, Shield, Storage, Vibrate, type IconType } from '@/ui/icons';
 import { Loader } from '@/ui/loader';
 import { Button } from '@/ui/puffy';
@@ -89,7 +89,7 @@ export default function Settings() {
       </View>
 
       {/* Backup */}
-      <View style={[s.card, { backgroundColor: c.sand, gap: space.md }]}>
+      <View style={[s.card, { gap: space.md }]}>
         <View style={s.cardHead}>
           <Badge I={Archive} tint={c.sun} />
           <View style={{ flex: 1 }}>
@@ -126,12 +126,12 @@ export default function Settings() {
       </View>
 
       {hasNative && (
-        <View style={[s.card, { backgroundColor: c.mint, gap: space.md }]}>
+        <View style={[s.card, { gap: space.md }]}>
           <View style={s.cardHead}>
-            <Badge I={Share} tint="#FFFFFF" />
+            <Badge I={Share} tint={c.mint} />
             <View style={{ flex: 1 }}>
-              <Text style={[ty.title, { color: c.onAccent }]}>Sticker pack</Text>
-              <Text style={[ty.meta, { color: c.onAccent }]}>Your 30 newest stickers become one “CamArt” pack in WhatsApp. Made more? Tap again to refresh it.</Text>
+              <Text style={ty.title}>Sticker pack</Text>
+              <Text style={ty.meta}>Your 30 newest stickers become one “CamArt” pack in WhatsApp. Made more? Tap again to refresh it.</Text>
             </View>
           </View>
           <Button label={pack.busy ? 'Preparing…' : 'Add to WhatsApp'} tone="ink" disabled={pack.busy} onPress={addPack} />
@@ -197,8 +197,9 @@ export default function Settings() {
 
 function Stat({ n, label, tint }: { n: number | string; label: string; tint: string }) {
   const s = useStyles();
+  const { scheme } = useTheme();
   return (
-    <View style={[s.stat, { backgroundColor: tint }]}>
+    <View style={[s.stat, { backgroundColor: tintGlass(tint, scheme) }]}>
       <Text style={s.statNum} numberOfLines={1} adjustsFontSizeToFit>{n}</Text>
       <Text style={s.statLabel}>{label}</Text>
     </View>
@@ -242,19 +243,19 @@ function Row({ I, tint, title, sub, children }: { I: IconType; tint: string; tit
 }
 
 const useStyles = themed((c, ty) => StyleSheet.create({
-  seg: { flexDirection: 'row', margin: space.md, marginTop: 0, padding: 4, borderRadius: 22, backgroundColor: c.wash },
+  seg: { flexDirection: 'row', margin: space.md, marginTop: 0, padding: 4, borderRadius: 22, backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge },
   segItem: { flex: 1, height: 40, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   segOn: { backgroundColor: c.ink },
   segText: { fontFamily: font.uiBold, fontSize: 14, color: c.ink },
   segTextOn: { color: c.milk },
   statRow: { flexDirection: 'row', gap: space.sm },
-  stat: { flex: 1, borderRadius: radius.lg, padding: space.lg, gap: 2 },
+  stat: { flex: 1, borderRadius: radius.lg, padding: space.lg, gap: 2, borderWidth: 1, borderColor: c.glassEdge },
   statNum: { fontFamily: font.display, fontSize: 32, lineHeight: 36, color: c.onAccent, fontVariant: ['tabular-nums'] },
   statLabel: { fontFamily: font.uiBold, fontSize: 13, color: c.onAccent },
-  card: { borderRadius: radius.lg, padding: space.lg },
+  card: { borderRadius: radius.lg, padding: space.lg, ...glass(c) },
   cardHead: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
   badge: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  status: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.md, backgroundColor: c.paper },
-  group: { borderRadius: radius.lg, backgroundColor: c.paper, paddingVertical: space.xs },
+  status: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.md, backgroundColor: c.glassSoft },
+  group: { borderRadius: radius.lg, ...glass(c), paddingVertical: space.xs },
   row: { minHeight: hit + 20, flexDirection: 'row', alignItems: 'center', gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.sm },
 }));

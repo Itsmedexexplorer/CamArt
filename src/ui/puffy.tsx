@@ -12,7 +12,7 @@ import { ShapeArt } from '@/ui/shape-art';
 
 type Tone = 'cherry' | 'ink' | 'soft' | 'glass';
 const tones = (c: Palette) => ({
-  bg: { cherry: c.cherry, ink: c.ink, soft: c.wash, glass: 'transparent' } as Record<Tone, string>,
+  bg: { cherry: c.cherry, ink: c.ink, soft: c.glassSoft, glass: 'transparent' } as Record<Tone, string>,
   fg: { cherry: '#FFFFFF', ink: c.milk, soft: c.ink, glass: c.ink } as Record<Tone, string>,
 });
 
@@ -94,7 +94,7 @@ export function Button({
         {glass ? (
           <Glass target={target} camera={camera} style={[s.face, round && s.round]}>{content}</Glass>
         ) : (
-          <View style={[s.face, round && s.round, { backgroundColor: bg[tone] }]}>{content}</View>
+          <View style={[s.face, round && s.round, { backgroundColor: bg[tone] }, tone === 'soft' && s.rim]}>{content}</View>
         )}
       </Animated.View>
     </Pressable>
@@ -167,7 +167,8 @@ const useStyles = themed((c, ty) => StyleSheet.create({
   face: { minHeight: hit + 8, paddingHorizontal: space.xl, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm },
   round: { width: hit + 4, minHeight: hit + 4, paddingHorizontal: 0 },
   label: { fontFamily: font.uiBold, fontSize: 16 },
-  chip: { minHeight: hit, paddingHorizontal: space.md, borderRadius: radius.md, backgroundColor: c.wash, alignItems: 'center', justifyContent: 'center', gap: space.xs },
+  chip: { minHeight: hit, paddingHorizontal: space.md, borderRadius: radius.md, backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge, alignItems: 'center', justifyContent: 'center', gap: space.xs },
+  rim: { borderWidth: 1, borderColor: c.glassEdge },
   chipOn: { backgroundColor: c.ink },
   chipText: { fontFamily: font.uiBold, fontSize: 13, color: c.ink },
   empty: { alignItems: 'center', gap: space.md, padding: space.xxl, paddingTop: 72 },

@@ -25,6 +25,10 @@ export const palettes = {
     sand: '#F3E7D7',
     line: '#ECEAE2',
     wash: '#EFEDE5', // quiet filled surfaces
+    // Glassmorphism: translucent frosted surfaces floating over the Ambient colour field.
+    glass: 'rgba(255,255,255,0.5)', // cards
+    glassSoft: 'rgba(255,255,255,0.55)', // insets inside a glass card (segments, chips, fields)
+    glassEdge: 'rgba(255,255,255,0.85)', // bright rim where light catches the pane
   },
   dark: {
     ...accents,
@@ -35,6 +39,9 @@ export const palettes = {
     sand: '#2A251E',
     line: '#262B37',
     wash: '#222733',
+    glass: 'rgba(255,255,255,0.07)',
+    glassSoft: 'rgba(255,255,255,0.08)',
+    glassEdge: 'rgba(255,255,255,0.13)',
   },
 } as const;
 export type Palette = { [K in keyof typeof palettes.light]: string };
@@ -42,6 +49,11 @@ export type Scheme = keyof typeof palettes;
 
 /** Light palette, for code that must not change with the scheme (sticker rendering, camera chrome). */
 export const color = palettes.light;
+
+/** Frosted card: translucent fill plus a light rim. Apply to any surface sitting on the Ambient field. */
+export const glass = (c: Palette) => ({ backgroundColor: c.glass, borderWidth: 1, borderColor: c.glassEdge }) as const;
+/** An accent tile made of tinted glass (stays readable with onAccent text in both schemes). */
+export const tintGlass = (hex: string, scheme: Scheme) => hex + (scheme === 'dark' ? 'D9' : '99');
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 } as const;
 

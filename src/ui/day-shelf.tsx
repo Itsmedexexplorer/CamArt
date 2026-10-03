@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import type { Memory } from '@/lib/memories';
-import { font, radius, space, themed, useTheme } from '@/theme';
+import { font, glass, radius, space, themed, useTheme } from '@/theme';
 import { Sticker, tilt } from '@/ui/puffy';
 
 /** One day as a sticker board: stickers alternate sides, overlap a little, each at its own angle. */
@@ -10,7 +10,7 @@ export function DayShelf({ date, items }: { date: Date; items: Memory[] }) {
   const { ty } = useTheme();
   const s = useStyles();
   const { width } = useWindowDimensions();
-  const W = width - space.lg * 2;
+  const W = width - space.md * 4 - 2; // card margin + padding + rim
   const placed = items.map((m, i) => {
     const t = tilt(m.id);
     const size = W * (items.length === 1 ? 0.7 : 0.5 + (Math.abs(t) % 3) * 0.05);
@@ -48,9 +48,9 @@ export function DayShelf({ date, items }: { date: Date; items: Memory[] }) {
 }
 
 const useStyles = themed((c, ty) => StyleSheet.create({
-  day: { paddingHorizontal: space.lg, paddingBottom: space.xxl },
+  day: { marginHorizontal: space.md, marginBottom: space.lg, padding: space.md, paddingBottom: space.lg, borderRadius: radius.lg, ...glass(c) },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.xs },
   num: { fontFamily: font.display, fontSize: 52, lineHeight: 56, letterSpacing: -2, color: c.ink, fontVariant: ['tabular-nums'] },
-  count: { minWidth: 32, height: 32, borderRadius: radius.pill, backgroundColor: c.wash, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
+  count: { minWidth: 32, height: 32, borderRadius: radius.pill, backgroundColor: c.glassSoft, borderWidth: 1, borderColor: c.glassEdge, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
   countText: { fontFamily: font.uiBold, color: c.ink },
 }));
