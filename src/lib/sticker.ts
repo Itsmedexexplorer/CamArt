@@ -1,5 +1,7 @@
 import {
+  AlphaType,
   BlendMode,
+  ColorType,
   BlurStyle,
   ClipOp,
   ImageFormat,
@@ -392,6 +394,48 @@ export async function loadCrop(uri: string, crop: Crop): Promise<SkImage> {
   const out = surface.makeImageSnapshot().makeNonTextureImage();
   if (!out) throw new Error('Could not prepare photo');
   return out;
+}
+
+/**
+ * Prepares a lifted subject (transparent PNG from the native segmenter) as a sticker:
+ * finds where the subject actually is, trims the empty space around it and centres it in
+ * the square, so the whole subject is kept and fills the sticker instead of floating tiny
+ * or being cut off by the camera frame.
+ */
+export async function loadSubject(uri: string): Promise<SkImage> {
+  const src = Skia.Image.MakeImageFromEncoded(await Skia.Data.fromURI(uri));
+  if (!src) throw new Error('Could not read the lifted subject');
+  const W = src.width(), H = src.height();
+
+  // Find the subject's bounds on a small copy (fast), then map back to full size.
+  const k = Math.min(1, 256 / Math.max(W, H));
+  const sw = Math.max(1, Math.round(W * k)), sh = Math.max(1, Math.round(H * k));
+  const small = Skia.Surface.MakeOffscreen(sw, sh)!;
+  small.getCanvas().drawImageRect(src, Skia.XYWHRect(0, 0, W, H), Skia.XYWHRect(0, 0, sw, sh), Skia.Paint());
+  small.flush();
+  const px = small.makeImageSnapshot().readPixels(0, 0, { width: sw, height: sh, colorType: ColorType.RGBA_8888, alphaType: AlphaType.Unpremul });
+  let x0 = sw, y0 = sh, x1 = -1, y1 = -1;
+  if (px) {
+    for (let y = 0; y < sh; y++)
+      for (let x = 0; x < sw; x++)
+        if (px[(y * sw + x) * 4 + 3] > 24) {
+          if (x < x0) x0 = x;
+          if (x > x1) x1 = x;
+          if (y < y0) y0 = y;
+          if (y > y1) y1 = y;
+        }
+  }
+  if (x1 < 0) throw new Error('No clear subject found in this photo. Try one with a person, pet or object up close.');
+
+  const bx = x0 / k, by = y0 / k, bw = (x1 - x0 + 1) / k, bh = (y1 - y0 + 1) / k;
+  const fit = S / Math.max(bw, bh); // contain: the longer side spans the square
+  const dw = bw * fit, dh = bh * fit;
+  const out = Skia.Surface.MakeOffscreen(S, S)!;
+  out.getCanvas().drawImageRect(src, Skia.XYWHRect(bx, by, bw, bh), Skia.XYWHRect((S - dw) / 2, (S - dh) / 2, dw, dh), Skia.Paint());
+  out.flush();
+  const img = out.makeImageSnapshot().makeNonTextureImage();
+  if (!img) throw new Error('Could not prepare the lifted subject');
+  return img;
 }
 
 /** Render the final sticker to PNG bytes (transparent outside the die-cut). */

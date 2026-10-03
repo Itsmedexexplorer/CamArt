@@ -11,7 +11,7 @@ import { haptic } from '@/lib/haptics';
 import { discardOriginal, saveMemory, uriOf } from '@/lib/memories';
 import { hasNative, liftSubject } from '@/lib/native';
 import {
-  drawSticker, EDGES, EXPORT_VERSION, FILTER_LABEL, FILTER_MATRIX, FILTERS, GRAINS, loadCrop, renderSticker, S, SHAPE_EDGE, SHAPE_LABEL, SHAPES, stampText, textMetrics,
+  drawSticker, EDGES, EXPORT_VERSION, FILTER_LABEL, FILTER_MATRIX, FILTERS, GRAINS, loadCrop, loadSubject, renderSticker, S, SHAPE_EDGE, SHAPE_LABEL, SHAPES, stampText, textMetrics,
   type Edge, type Filter, type Look, type Shape, type TextItem, type TextSize,
 } from '@/lib/sticker';
 import { settle, font, lift, motion, radius, space, themed, useTheme } from '@/theme';
@@ -53,10 +53,13 @@ export default function Editor() {
     if (lifted) return setCutout(true);
     setLifting(true);
     try {
-      setLifted(await loadCrop(await liftSubject(uriOf(p.original)), crop));
+      setLifted(await loadSubject(await liftSubject(uriOf(p.original))));
       setCutout(true);
     } catch (e) {
-      oops('Could not lift the subject', e, 'Try another photo.');
+      const msg = e instanceof Error ? e.message : '';
+      // First run on Android: Google Play downloads the segmentation model in the background.
+      if (/download|module|unavailable/i.test(msg)) oops('Lift is getting ready', new Error('Your phone is downloading the lift model. Give it a minute and tap Lift again.'));
+      else oops('Could not lift the subject', e, 'Try another photo.');
     } finally {
       setLifting(false);
     }
