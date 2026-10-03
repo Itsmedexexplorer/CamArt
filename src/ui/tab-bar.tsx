@@ -20,6 +20,10 @@ const PILL_H = 48;
 /** Space a screen should leave at the bottom so content clears the floating bar. */
 export const useTabSpace = () => useSafeAreaInsets().bottom + space.md + TAB_H + space.md;
 
+// Plain arrays for the capsule's colour blend (worklets can't call .map callbacks from JS).
+const TINT_AT = TABS.map((_, i) => i);
+const TINTS = TABS.map((t) => t.tint);
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const glide = LinearTransition.springify().damping(settle.damping).stiffness(settle.stiffness);
 
@@ -55,7 +59,7 @@ export function TabBar() {
   const capsule = useAnimatedStyle(() => ({
     width: w.value,
     transform: [{ translateX: x.value }],
-    backgroundColor: interpolateColor(tint.value, TABS.map((_, i) => i), TABS.map((t) => t.tint)),
+    backgroundColor: interpolateColor(tint.value, TINT_AT, TINTS),
   }));
 
   return (
