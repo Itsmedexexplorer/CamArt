@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { Image } from 'expo-image';
-import type { ReactNode, RefObject } from 'react';
+import { Canvas, LinearGradient, RoundedRect, vec } from '@shopify/react-native-skia';
+import { useState, type ReactNode, type RefObject } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming, ZoomIn } from 'react-native-reanimated';
 
@@ -37,7 +38,7 @@ function usePress() {
  */
 export function Glass({ children, style, target, camera }: { children?: ReactNode; style?: StyleProp<ViewStyle>; target?: RefObject<View | null>; camera?: boolean }) {
   const dark = useTheme().scheme === 'dark';
-  if (camera) return <View style={[{ overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.38)' }, style]}>{children}</View>;
+  if (camera) return <CameraGlass style={style}>{children}</CameraGlass>;
   const ios = Platform.OS === 'ios';
   const veil = dark ? `rgba(30,30,34,${target ? 0.42 : 0.7})` : `rgba(250,249,245,${target ? 0.5 : 0.78})`;
   return (
@@ -53,6 +54,33 @@ export function Glass({ children, style, target, camera }: { children?: ReactNod
       ]}>
       {children}
     </BlurView>
+  );
+}
+
+/**
+ * Glass over the live viewfinder (pills and circles). The preview can't be blurred on Android, so
+ * the pane is drawn the way light actually reads on glass: a clear pane a touch brighter than the
+ * smoked surround, a top sheen, a rim lit at the top and faintly at the bottom, and a soft shadow.
+ */
+function CameraGlass({ children, style }: { children?: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const { w, h } = size, r = h / 2;
+  return (
+    <View style={[{ boxShadow: '0px 4px 14px rgba(0,0,0,0.28)' }, style]}
+      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
+      {w > 0 && (
+        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+          <RoundedRect x={0} y={0} width={w} height={h} r={r} color="rgba(255,255,255,0.13)" />
+          <RoundedRect x={0} y={0} width={w} height={h} r={r}>
+            <LinearGradient start={vec(0, 0)} end={vec(0, h)} colors={['rgba(255,255,255,0.30)', 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.10)']} positions={[0, 0.45, 0.6, 1]} />
+          </RoundedRect>
+          <RoundedRect x={0.75} y={0.75} width={w - 1.5} height={h - 1.5} r={r - 0.75} style="stroke" strokeWidth={1.5}>
+            <LinearGradient start={vec(0, 0)} end={vec(0, h)} colors={['rgba(255,255,255,0.85)', 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.40)']} positions={[0, 0.55, 1]} />
+          </RoundedRect>
+        </Canvas>
+      )}
+      {children}
+    </View>
   );
 }
 
