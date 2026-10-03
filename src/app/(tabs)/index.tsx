@@ -52,7 +52,6 @@ export default function CameraScreen() {
 }
 
 function Camera() {
-  const { c } = useTheme();
   const s = useStyles();
   const cam = useRef<CameraView>(null);
   const insets = useSafeAreaInsets();
@@ -87,10 +86,8 @@ function Camera() {
     const outline = shapePath(shape, x, y, side);
     const win = windowPath(shape, x, y, side);
     const band = paperObject ? Skia.Path.MakeFromOp(outline, win, PathOp.Difference) : null;
-    // Everything outside the frame becomes one sheet of smoked glass, so only the frame is "open".
-    const glass = Skia.Path.MakeFromOp(Skia.Path.Rect(Skia.XYWHRect(0, 0, box.w, box.h)), outline, PathOp.Difference);
-    return { outline, band, glass };
-  }, [shape, box.w, box.h, cx, cy, side, paperObject]);
+    return { outline, band };
+  }, [shape, box.w, cx, cy, side, paperObject]);
   const tint = EDGES[SHAPE_EDGE[shape]];
 
   // Motion: a new shape clicks into place (quick squeeze, lively release); capture "stamps" it down and back.
@@ -193,10 +190,6 @@ function Camera() {
 
       {frame && (
         <>
-          {/* Everything outside the frame is the page itself, so the camera shows only through the frame. */}
-          <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-            {frame.glass && <Path path={frame.glass} color={c.milk} />}
-          </Canvas>
           {/* The frame itself: lifted off the scene with a soft drop shadow. */}
           <Animated.View style={[StyleSheet.absoluteFill, { transformOrigin: [cx, cy, 0] }, frameStyle]} pointerEvents="none">
             <Canvas style={StyleSheet.absoluteFill}>
@@ -265,19 +258,19 @@ function Camera() {
 }
 
 const useStyles = themed((c) => StyleSheet.create({
-  fill: { flex: 1, backgroundColor: c.milk },
+  fill: { flex: 1, backgroundColor: '#0B0D12' },
   top: { position: 'absolute', left: 0, right: 0, paddingHorizontal: space.lg, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  kicker: { fontFamily: font.uiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: c.inkSoft },
+  kicker: { fontFamily: font.uiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.5)', textShadowRadius: 4, textShadowOffset: { width: 0, height: 1 } },
   dateChip: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 48, borderRadius: 24, paddingLeft: space.lg, paddingRight: 6 },
   date: { fontFamily: font.display, fontSize: 18, letterSpacing: -0.3, color: c.ink },
   countDot: { minWidth: 36, height: 36, borderRadius: 18, paddingHorizontal: 8, backgroundColor: c.lime, alignItems: 'center', justifyContent: 'center' },
   countNum: { fontFamily: font.display, fontSize: 16, color: c.onAccent },
   zoomText: { fontFamily: font.display, fontSize: 17, color: c.ink },
-  name: { position: 'absolute', alignSelf: 'center', height: NAME_H, fontFamily: font.display, fontSize: 30, letterSpacing: -1, color: c.ink },
+  name: { position: 'absolute', alignSelf: 'center', height: NAME_H, fontFamily: font.display, fontSize: 30, letterSpacing: -1, color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.45)', textShadowRadius: 8, textShadowOffset: { width: 0, height: 2 } },
   bottom: { position: 'absolute', left: 0, right: 0, alignItems: 'center', gap: space.lg },
   row: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xxl },
   // Pro shutter: thick white ring, a clear gap, solid white disc.
-  shutter: { width: 84, height: 84, borderRadius: 42, borderWidth: 5, borderColor: c.ink, alignItems: 'center', justifyContent: 'center' },
-  shutterDisc: { width: 64, height: 64, borderRadius: 32, backgroundColor: c.ink },
+  shutter: { width: 84, height: 84, borderRadius: 42, borderWidth: 5, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  shutterDisc: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFFFFF' },
   side: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
 }));

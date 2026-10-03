@@ -1,5 +1,4 @@
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring, type SharedValue } from 'react-native-reanimated';
@@ -7,7 +6,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { haptic } from '@/lib/haptics';
 import { SHAPE_LABEL, SHAPES, type Shape } from '@/lib/sticker';
-import { settle, useTheme } from '@/theme';
+import { color, settle } from '@/theme';
 import { ShapeArt } from '@/ui/shape-art';
 
 const DEG = Math.PI / 180;
@@ -17,13 +16,12 @@ const FROM = -8 * DEG, TO = 98 * DEG; // the visible quarter (plus a little), me
 const GLYPH = 40;
 
 /**
- * Rotary ring of shapes curled around the shutter, from 12 o'clock to 3 o'clock.
+ * Free-floating shapes on a bent path curled around the shutter, from 12 o'clock to 3 o'clock.
  * Angles run clockwise from the top. Drag around the ring or flick it; it glides to rest
  * with a haptic tick each time a shape passes the marker, like a real detented dial.
  * `cx, cy` is the shutter's centre in the parent; `R` the ring's radius.
  */
 export function ShapeDial({ cx, cy, R, value, onChange }: { cx: number; cy: number; R: number; value: Shape; onChange: (s: Shape) => void }) {
-  const { c } = useTheme();
   const pos = useSharedValue(SHAPES.indexOf(value));
   const start = useSharedValue(0);
   const grab = useSharedValue(0);
@@ -73,12 +71,7 @@ export function ShapeDial({ cx, cy, R, value, onChange }: { cx: number; cy: numb
       scheduleOnRN(done, target);
     });
 
-  // Faint track so the ring reads as a dial, plus a marker just outside it at the selected spot.
-  const track = useMemo(() => {
-    const p = Skia.Path.Make();
-    p.addArc(Skia.XYWHRect(ox - R, oy - R, R * 2, R * 2), -90 + FROM / DEG, (TO - FROM) / DEG);
-    return p;
-  }, [ox, oy, R]);
+  // Marker just outside the ring at the selected spot.
   const mr = R + GLYPH / 2 + 10;
 
   return (
@@ -92,10 +85,7 @@ export function ShapeDial({ cx, cy, R, value, onChange }: { cx: number; cy: numb
           const i = SHAPES.indexOf(value) + (e.nativeEvent.actionName === 'increment' ? 1 : -1);
           if (i >= 0 && i <= last) onChange(SHAPES[i]);
         }}>
-        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Path path={track} style="stroke" strokeWidth={GLYPH + 12} strokeCap="round" color={c.paper} opacity={0.5} />
-        </Canvas>
-        <View style={[s.marker, { backgroundColor: c.ink, left: ox + mr * Math.sin(SEL) - 3, top: oy - mr * Math.cos(SEL) - 3 }]} />
+        <View style={[s.marker, { left: ox + mr * Math.sin(SEL) - 3, top: oy - mr * Math.cos(SEL) - 3 }]} />
         {SHAPES.map((sh, i) => (
           <Item key={sh} i={i} sh={sh} pos={pos} R={R} ox={ox} oy={oy} onPress={() => onChange(sh)} />
         ))}
@@ -132,5 +122,5 @@ function Item({ i, sh, pos, R, ox, oy, onPress }: { i: number; sh: Shape; pos: S
 
 const s = StyleSheet.create({
   item: { position: 'absolute', left: 0, top: 0 },
-  marker: { position: 'absolute', width: 6, height: 6, borderRadius: 3 },
+  marker: { position: 'absolute', width: 6, height: 6, borderRadius: 3, backgroundColor: color.paper },
 });
