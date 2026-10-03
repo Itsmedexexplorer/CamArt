@@ -10,9 +10,9 @@ import { color, settle } from '@/theme';
 import { ShapeArt } from '@/ui/shape-art';
 
 const DEG = Math.PI / 180;
-const STEP = 24 * DEG; // angle between shapes on the ring
-const SEL = 45 * DEG; // the selected shape rests halfway round, between 12 and 3 o'clock
-const FROM = -8 * DEG, TO = 98 * DEG; // the visible quarter (plus a little), measured clockwise from 12 o'clock
+const STEP = 32 * DEG; // angle between shapes on the ring
+const SEL = 0; // the selected shape rests at 12 o'clock, under the marker
+const FROM = -12 * DEG, TO = 98 * DEG; // the visible quarter (plus a little), measured clockwise from 12 o'clock
 const GLYPH = 40;
 
 /**
@@ -107,7 +107,7 @@ function Item({ i, sh, pos, R, ox, oy, onPress }: { i: number; sh: Shape; pos: S
         { translateX: ox + R * Math.sin(a) - GLYPH / 2 },
         { translateY: oy - R * Math.cos(a) - GLYPH / 2 },
         { rotate: `${a - SEL}rad` },
-        { scale: far < 1 ? 1.25 - far * 0.4 : Math.max(0.85 - (far - 1) * 0.1, 0.6) },
+        { scale: far < 1 ? 1.15 - far * 0.3 : Math.max(0.85 - (far - 1) * 0.08, 0.65) },
       ],
     };
   });

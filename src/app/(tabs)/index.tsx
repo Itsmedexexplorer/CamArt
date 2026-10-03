@@ -1,4 +1,4 @@
-import { Canvas, Path, PathOp, Shadow, Skia } from '@shopify/react-native-skia';
+import { Canvas, Group, LinearGradient, Path, PathOp, Shader, Shadow, Skia, vec } from '@shopify/react-native-skia';
 import { CameraView, useCameraPermissions, type FlashMode } from 'expo-camera';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { haptic } from '@/lib/haptics';
 import { dayKey, keepOriginal, useMemories } from '@/lib/memories';
-import { EDGES, SHAPE_EDGE, SHAPE_LABEL, shapePath, windowPath, type Shape } from '@/lib/sticker';
+import { EDGES, grainEffect, SHAPE_EDGE, SHAPE_LABEL, shapePath, windowPath, type Shape } from '@/lib/sticker';
 import { settle, font, motion, space, themed, useTheme } from '@/theme';
 import { Flash, FlashAuto, FlashOff, Flip } from '@/ui/icons';
 import { Button, Empty, Surface } from '@/ui/puffy';
@@ -86,8 +86,10 @@ function Camera() {
     const outline = shapePath(shape, x, y, side);
     const win = windowPath(shape, x, y, side);
     const band = paperObject ? Skia.Path.MakeFromOp(outline, win, PathOp.Difference) : null;
-    return { outline, band };
-  }, [shape, box.w, cx, cy, side, paperObject]);
+    // Everything outside the frame becomes one sheet of smoked glass, so only the frame is "open".
+    const glass = Skia.Path.MakeFromOp(Skia.Path.Rect(Skia.XYWHRect(0, 0, box.w, box.h)), outline, PathOp.Difference);
+    return { outline, band, glass };
+  }, [shape, box.w, box.h, cx, cy, side, paperObject]);
   const tint = EDGES[SHAPE_EDGE[shape]];
 
   // Motion: a new shape clicks into place (quick squeeze, lively release); capture "stamps" it down and back.
@@ -190,6 +192,22 @@ function Camera() {
 
       {frame && (
         <>
+          {/* Smoked glass outside the frame: translucent tint, a breath of frost grain, a top sheen. */}
+          <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+            {frame.glass && (
+              <>
+                <Path path={frame.glass} color="rgba(10,12,18,0.58)" />
+                <Group opacity={0.05} blendMode="overlay">
+                  <Path path={frame.glass}>
+                    <Shader source={grainEffect} uniforms={{ seed: 3.1 }} />
+                  </Path>
+                </Group>
+                <Path path={frame.glass}>
+                  <LinearGradient start={vec(0, 0)} end={vec(box.w * 0.4, box.h * 0.5)} colors={['rgba(255,255,255,0.10)', 'rgba(255,255,255,0)']} />
+                </Path>
+              </>
+            )}
+          </Canvas>
           {/* The frame itself: lifted off the scene with a soft drop shadow. */}
           <Animated.View style={[StyleSheet.absoluteFill, { transformOrigin: [cx, cy, 0] }, frameStyle]} pointerEvents="none">
             <Canvas style={StyleSheet.absoluteFill}>
