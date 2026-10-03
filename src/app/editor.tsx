@@ -64,7 +64,7 @@ export default function Editor() {
   const [prevFilter, setPrevFilter] = useState<Filter | null>(null);
   const [grain, setGrain] = useState<number>(GRAINS[1]);
   const [caption, setCaption] = useState('');
-  const [showDate, setShowDate] = useState(true);
+  const [showDate, setShowDate] = useState(false);
   const [texts, setTexts] = useState<TextItem[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [phase, setPhase] = useState<'edit' | 'saving' | 'saved'>('edit');
