@@ -30,7 +30,17 @@ export default function CameraScreen() {
   const { c } = useTheme();
   const s = useStyles();
   const [focused, setFocused] = useState(true);
-  useFocusEffect(useCallback(() => (setFocused(true), () => setFocused(false)), []));
+  // Keep the camera alive through the fade-out, so leaving the tab doesn't flash black mid-transition.
+  const blurTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useFocusEffect(
+    useCallback(() => {
+      clearTimeout(blurTimer.current);
+      setFocused(true);
+      return () => {
+        blurTimer.current = setTimeout(() => setFocused(false), 260);
+      };
+    }, []),
+  );
 
   if (!perm) return <View style={s.fill} />;
   if (!perm.granted)
