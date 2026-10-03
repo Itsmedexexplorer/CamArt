@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeOut, useReducedMotion, ZoomIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +14,7 @@ import { Backdrop } from '@/ui/backdrop';
 import { useTilt } from '@/ui/tilt';
 import { Check, Copy, Share, Trash } from '@/ui/icons';
 import { Button, Empty, Sticker } from '@/ui/puffy';
+import { ask, oops } from '@/ui/dialog';
 
 export default function MemoryScreen() {
   const { c, ty } = useTheme();
@@ -37,8 +38,7 @@ export default function MemoryScreen() {
       const { file } = await stickerPng(m);
       await Sharing.shareAsync(file.uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: 'Share sticker' });
     } catch (e) {
-      haptic.error();
-      Alert.alert('Could not share', e instanceof Error ? e.message : 'Try again.');
+      oops('Could not share', e, 'Try again.');
     }
   };
 
@@ -49,16 +49,15 @@ export default function MemoryScreen() {
       haptic.success();
       setTimeout(() => setCopied(false), 1800);
     } catch (e) {
-      haptic.error();
-      Alert.alert('Could not copy', e instanceof Error ? e.message : 'Try again.');
+      oops('Could not copy', e, 'Try again.');
     }
   };
 
   const remove = () =>
-    Alert.alert('Delete this memory?', 'The sticker and its original photo will be removed from this device.', [
-      { text: 'Cancel', style: 'cancel' },
+    ask('Delete this memory?', 'The sticker and its original photo will be removed from this device.', [
+      { label: 'Keep it', style: 'cancel' },
       {
-        text: 'Delete',
+        label: 'Delete',
         style: 'destructive',
         onPress: () => {
           setGone(true);
@@ -66,7 +65,7 @@ export default function MemoryScreen() {
           setTimeout(() => (router.back(), deleteMemory(m.id)), 220);
         },
       },
-    ]);
+    ], Trash);
 
   const chips = [SHAPE_LABEL[m.shape as Shape] ?? m.shape, FILTER_LABEL[m.filter as Filter] ?? m.filter, d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })];
 

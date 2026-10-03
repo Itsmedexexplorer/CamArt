@@ -2,7 +2,7 @@ import { Canvas, Group, LinearGradient, Path, PathOp, Shader, Shadow, Skia, vec 
 import { CameraView, useCameraPermissions, type FlashMode } from 'expo-camera';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +15,7 @@ import { Flash, FlashAuto, FlashOff, Flip } from '@/ui/icons';
 import { Button, Empty, Surface } from '@/ui/puffy';
 import { ShapeDial } from '@/ui/shape-dial';
 import { useTabSpace } from '@/ui/tab-bar';
+import { oops } from '@/ui/dialog';
 
 const FLASH_NEXT: Record<FlashMode, FlashMode> = { off: 'auto', auto: 'on', on: 'off', screen: 'off' };
 const FLASH_ICON = { off: FlashOff, auto: FlashAuto, on: Flash, screen: Flash };
@@ -142,8 +143,7 @@ function Camera() {
       router.push({ pathname: '/editor', params: { id, original, shape, cy: String(crop.cy), frac: String(crop.frac) } });
     } catch (e) {
       flashO.set(0);
-      haptic.error();
-      Alert.alert('Could not take photo', e instanceof Error ? e.message : 'Try again.');
+      oops('Could not take photo', e, 'Try again.');
     } finally {
       setTorch(false);
       busy.current = false;

@@ -1,7 +1,7 @@
 import { Canvas, ColorMatrix, createPicture, Group, Image as SkImg, Paint, Picture, RuntimeShader, Skia, useTypeface, type SkImage, type SkTypeface } from '@shopify/react-native-skia';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, PixelRatio, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, PixelRatio, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useDerivedValue, useReducedMotion, useSharedValue, withSequence, withTiming, ZoomIn } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -21,6 +21,7 @@ import { Backdrop } from '@/ui/backdrop';
 import { Loader } from '@/ui/loader';
 import { useTilt } from '@/ui/tilt';
 import { ShapeArt } from '@/ui/shape-art';
+import { ask, oops } from '@/ui/dialog';
 
 type Panel = 'shape' | 'filter' | 'note' | 'write';
 const GRAIN_LABEL = ['Off', 'Soft', 'Medium', 'Heavy'];
@@ -55,8 +56,7 @@ export default function Editor() {
       setLifted(await loadCrop(await liftSubject(uriOf(p.original)), crop));
       setCutout(true);
     } catch (e) {
-      haptic.error();
-      Alert.alert('Could not lift the subject', e instanceof Error ? e.message : 'Try another photo.');
+      oops('Could not lift the subject', e, 'Try another photo.');
     } finally {
       setLifting(false);
     }
@@ -151,16 +151,15 @@ export default function Editor() {
       setTimeout(() => router.replace(`/memory/${p.id}`), 700);
     } catch (e) {
       setPhase('edit');
-      haptic.error();
-      Alert.alert('Could not save', e instanceof Error ? e.message : 'Try again.');
+      oops('Could not save', e, 'Try again.');
     }
   }
 
   const close = () =>
-    Alert.alert('Discard this photo?', 'It has not been saved.', [
-      { text: 'Keep editing', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: () => router.back() },
-    ]);
+    ask('Discard this photo?', 'It hasn’t been saved yet, so it will be gone for good.', [
+      { label: 'Keep editing', style: 'cancel' },
+      { label: 'Discard', style: 'destructive', onPress: () => router.back() },
+    ], Trash);
 
   const pick = <T,>(set: (v: T) => void, cur: T) => (v: T) => {
     if (v === cur) return;

@@ -31,3 +31,4 @@ export { StickerIcon as Sticker } from 'phosphor-react-native/src/icons/Sticker'
 export { TextTIcon as TextT } from 'phosphor-react-native/src/icons/TextT';
 export { ImagesIcon as Images } from 'phosphor-react-native/src/icons/Images';
 export { MoonIcon as Moon } from 'phosphor-react-native/src/icons/Moon';
+export { WarningCircleIcon as Warning } from 'phosphor-react-native/src/icons/WarningCircle';

@@ -11,6 +11,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } 
 
 import { useSettings } from '@/lib/settings';
 import { font, palettes, SchemeContext, type Scheme } from '@/theme';
+import { DialogHost } from '@/ui/dialog';
 import { Intro } from '@/ui/intro';
 
 SplashScreen.preventAutoHideAsync();
@@ -45,6 +46,7 @@ export default function Root() {
             <Stack.Screen name="info" options={{ presentation: 'modal' }} />
           </Stack>
           <SchemeFade scheme={scheme} />
+          <DialogHost />
           {intro && <Intro onDone={() => setIntro(false)} />}
         </ThemeProvider>
       </SchemeContext.Provider>
